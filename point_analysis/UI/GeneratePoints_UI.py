@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog
 
-from ...utils import lazy_repair_combobox_in_dialog, CustomMessageBox, \
+from ...utils import repair_dialog_combos, InfoBox, \
     normalize_path, get_project_config, set_project_config
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -17,7 +17,7 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
         super(GeneratePoints_UI, self).__init__(parent)
         self.setupUi(self)
         self.generatePoints = generatePoints
-        lazy_repair_combobox_in_dialog(self)
+        repair_dialog_combos(self)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
 
@@ -38,7 +38,7 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
                 int(self.analiza_radius.text())
             )
         else:
-            CustomMessageBox(
+            InfoBox(
                 self,
                 'Wybierz poprawne ścieżki do przeprowadzenia analizy!'
             ).button_ok()

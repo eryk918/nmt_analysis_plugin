@@ -35,7 +35,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Analiza numerycznych modeli terenu</string>
+   <string>Zautomatyzowane analizy numerycznych modeli terenu</string>
   </property>
   <property name="accessibleName">
    <string notr="true"/>
@@ -209,6 +209,10 @@ color: #fff;
             </item>
             <item row="1" column="0">
              <widget class="QGroupBox" name="groupBox">
+              <property name="styleSheet">
+               <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+              </property>
               <property name="title">
                <string>Dodatkowe:</string>
               </property>
@@ -251,6 +255,10 @@ color: #fff;
             </item>
             <item row="0" column="0">
              <widget class="QGroupBox" name="groupBox_3">
+              <property name="styleSheet">
+               <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+              </property>
               <property name="title">
                <string>Opcje:</string>
               </property>

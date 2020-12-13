@@ -3,32 +3,35 @@
 import os
 import re
 from tempfile import mkstemp
-from typing import Union
 
 from PyQt5.QtCore import Qt
 from qgis.PyQt.QtGui import QPixmap, QIcon
 from qgis.PyQt.QtWidgets import QMessageBox, \
     QScrollArea, QWidget, QGridLayout, QLabel, QDialogButtonBox, QFontComboBox, \
     QComboBox, QApplication, QProgressDialog
-from qgis.core import QgsMessageLog, Qgis, QgsProject, QgsVectorLayer, QgsFeature, \
-    QgsMapLayer
+from qgis.core import QgsProject, QgsVectorLayer, \
+    QgsFeature
 from qgis.utils import iface
 
 project = QgsProject.instance()
 i_iface = iface
 
 
-class TmpCopyLayer(QgsVectorLayer):
+class CreateTMPCopy(QgsVectorLayer):
     parent_layer = None
 
     def __init__(self, *args, **kwargs):
         if 'parent_layer' in kwargs:
             self.parent_layer = kwargs['parent_layer']
             del kwargs['parent_layer']
-        super(TmpCopyLayer, self).__init__(*args, **kwargs)
+        super(CreateTMPCopy, self).__init__(*args, **kwargs)
 
     def set_symbolization_from_layer(self, layer):
-        copy_symbolization(layer, self)
+        file_handle, tmp_qml = mkstemp(suffix='.qml')
+        os.close(file_handle)
+        layer.saveNamedStyle(tmp_qml)
+        self.loadNamedStyle(tmp_qml)
+        os.remove(tmp_qml)
 
     def set_fields(self, fields):
         self.dataProvider().addAttributes(fields)
@@ -48,39 +51,28 @@ class TmpCopyLayer(QgsVectorLayer):
         iface.mapCanvas().refresh()
 
     def add_to_group(self, group_name, main_group=None, pos=0):
-        add_map_layer_to_group(self, group_name, main_group, position=pos)
+        add_map_layer(self, group_name, main_group, position=pos)
         self.triggerRepaint()
 
 
-def copy_symbolization(src_layer, dest_layer):
-    tmp_qml = get_tmp_symbolization_file(src_layer)
-    save_symbolization_and_remove_tmp(dest_layer, tmp_qml)
-
-
-def get_tmp_symbolization_file(layer):
-    file_handle, tmp_qml = mkstemp(suffix='.qml')
-    os.close(file_handle)
-    layer.saveNamedStyle(tmp_qml)
-
-    return tmp_qml
-
-
-def save_symbolization_and_remove_tmp(layer, tmp_qml):
-    layer.loadNamedStyle(tmp_qml)
-    os.remove(tmp_qml)
-
-
-def lazy_repair_combobox_in_dialog(dlg_instance, brutal_change=False):
-    dir_list = [dlg_instance.__getattribute__(dir_elem) for dir_elem in dlg_instance.__dir__()]
-
-    filter_dir_list = list(filter(lambda elem: isinstance(elem, QComboBox)
-                                               or isinstance(elem, QFontComboBox),
-                                  dir_list))
+def repair_dialog_combos(dlg_instance):
+    dir_list = [dlg_instance.__getattribute__(dir_elem) for dir_elem in
+                dlg_instance.__dir__()]
+    filter_dir_list = list(filter(
+        lambda elem: isinstance(elem, QComboBox) or isinstance(elem,
+                                                               QFontComboBox),
+        dir_list))
     if not filter_dir_list:
         return
     for cbbx in filter_dir_list:
         cbbx.installEventFilter(dlg_instance)
-        make_combobox_great_again(cbbx)
+        temp_value = cbbx.isEditable()
+        cbbx.setEditable(True)
+        cbbx.setStyleSheet(
+            cbbx.styleSheet() + " QComboBox { combobox-popup: 0; }")
+        cbbx.setMaxVisibleItems(10)
+        cbbx.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        cbbx.setEditable(temp_value)
 
 
 def get_project_config(parameter, key, default=''):
@@ -88,81 +80,65 @@ def get_project_config(parameter, key, default=''):
     return value
 
 
-def make_combobox_great_again(cbbx):
-    temp_bool = cbbx.isEditable()
-    cbbx.setEditable(1)
-    cbbx.setStyleSheet(cbbx.styleSheet() + " QComboBox { combobox-popup: 0; }")
-    cbbx.setMaxVisibleItems(10)
-    cbbx.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-    cbbx.setEditable(temp_bool)
-
-
 def set_project_config(parameter, key, value):
     if isinstance(project, QgsProject):
         return project.writeEntry(parameter, key, value)
 
 
-def get_simple_progressbar(max_len, title='Proszę czekać',
-                           txt='Trwa przetwarzanie danych.'):
-    progress = QProgressDialog()
-    progress.setFixedWidth(500)
-    progress.setWindowTitle(title)
-    progress.setLabelText(txt)
-    progress.setMaximum(max_len)
-    progress.setValue(0)
-    progress.setAutoClose(True)
-    progress.setCancelButton(None)
+def create_progress_bar(max_len, title='Proszę czekać',
+                        txt='Trwa przetwarzanie danych.', start_val=0,
+                        auto_close=True, cancel_btn=None):
+    progress_bar = QProgressDialog()
+    progress_bar.setFixedWidth(500)
+    progress_bar.setWindowTitle(title)
+    progress_bar.setLabelText(txt)
+    progress_bar.setMaximum(max_len)
+    progress_bar.setValue(start_val)
+    progress_bar.setAutoClose(auto_close)
+    progress_bar.setCancelButton(cancel_btn)
+    progress_bar.setStyleSheet(
+        'QProgressBar::chunk{background:qlineargradient(spread:reflect, x1:0, y1:0.494, x2:0, y2:1, stop:0.269231 rgba(55, 165, 126, 255), stop:1 rgba(38, 115, 85, 255));}*{text-align:center; color:#000;}')
     QApplication.processEvents()
-    return progress
+    return progress_bar
 
 
-class CustomMessageBox(QMessageBox):
-    stylesheet = """
-        * {
-            background-color: rgb(53, 85, 109, 220);
-            color: rgb(255, 255, 255);
-            font: 10pt "Segoe UI";
-            border: 0px;
-        }
+class InfoBox(QMessageBox):
+    def __init__(self, parent=None, text='', image='', title='',
+                 stylesheet=''):
+        if not stylesheet:
+            self.stylesheet = """
+               * {
+                    font: 10pt "Segoe UI";
+                    border: 0px;
+                }
+                
+                QPushButton {
+                    border: 1px solid rgb(132, 132, 132, 120);
+                    background: rgb(122, 122, 122, 90);
+                    border-radius: 6px;
+                    padding: 5px 15px;
+                    color: rgb(255, 255, 255);
+                }
 
-        QAbstractItemView {
-            selection-background-color:  rgb(87, 131, 167);
-        }
+                QPushButton:checked { 
+                    border: 1px solid rgb(132, 132, 132, 120);
+                }
 
-        QPushButton {
-            border: none;
-            border-width: 2px;
-            border-radius: 6px;
-            background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(65, 97, 124, 255), stop:1 rgba(90, 135, 172, 255));
-            padding: 5px 15px;
-        }
-
-        QPushButton:checked { 
-            background-color: qlineargradient(spread:pad, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(65, 97, 124, 255), stop:1 rgba(31, 65, 90, 255));
-            border: solid;
-            border-width: 2px;
-            border-color: rgb(65, 97, 124);
-        }
-
-        QPushButton:pressed { 
-            background-color: qlineargradient(spread:pad, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(65, 97, 124, 255), stop:1 rgba(31, 65, 90, 255));
-            border: solid;
-            border-width: 2px;
-            border-color: rgb(65, 97, 124);
-        }
-    """
-
-    def __init__(self, parent=None, text='', image=''):
-        if parent:
-            super(CustomMessageBox, self).__init__(parent)
+                QPushButton:pressed { 
+                    border: 1px solid rgb(132, 132, 132, 220);
+                }
+            """
         else:
-            super(CustomMessageBox, self).__init__(iface.mainWindow())
+            self.stylesheet = stylesheet
+        if parent:
+            super(InfoBox, self).__init__(parent)
+        else:
+            super(InfoBox, self).__init__(iface.mainWindow())
         self.text = text
-        self.rebuild_layout(text, image)
+        self.rebuild_layout(text, image, title)
 
-    def rebuild_layout(self, text, image):
+    def rebuild_layout(self, text, image, title):
         self.setStyleSheet(self.stylesheet)
-
         scrll = QScrollArea(self)
         scrll.setWidgetResizable(True)
         self.qwdt = QWidget()
@@ -173,8 +149,7 @@ class CustomMessageBox(QMessageBox):
             lbl.setStyleSheet(self.stylesheet)
             lbl.setAlignment(Qt.AlignCenter)
             lbl.setWordWrap(False)
-            lbl.setTextInteractionFlags(
-                Qt.TextSelectableByMouse)
+            lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
             self.qwdt.layout().addWidget(lbl, 1, 0)
         if image:
             px_lbl = QLabel(self)
@@ -192,7 +167,7 @@ class CustomMessageBox(QMessageBox):
         grd.addWidget(scrll, 0, 1)
         self.layout().removeItem(self.layout().itemAt(0))
         self.layout().removeItem(self.layout().itemAt(0))
-        self.setWindowTitle('GIAP - WODGiK')
+        self.setWindowTitle(title)
         self.setWindowIcon(QIcon())
 
     def button_ok(self):
@@ -204,33 +179,6 @@ class CustomMessageBox(QMessageBox):
     def button_yes_no(self):
         self.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         self.setDefaultButton(QMessageBox.No)
-        self.set_proper_size()
-        return QMessageBox.exec_(self)
-
-    def button_yes_no_cancel(self):
-        self.setStandardButtons(
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
-        self.setDefaultButton(QMessageBox.Cancel)
-        self.set_proper_size()
-        return QMessageBox.exec_(self)
-
-    def button_yes_no_open(self):
-        self.setStandardButtons(
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Open)
-        self.setDefaultButton(QMessageBox.No)
-        self.set_proper_size()
-        return QMessageBox.exec_(self)
-
-    def button_ok_open(self):
-        self.setStandardButtons(QMessageBox.Ok | QMessageBox.Open)
-        self.setDefaultButton(QMessageBox.Open)
-        self.set_proper_size()
-        return QMessageBox.exec_(self)
-
-    def button_edit_close(self):
-        self.setStandardButtons(
-            QMessageBox.Save | QMessageBox.Cancel | QMessageBox.Discard)
-        self.setDefaultButton(QMessageBox.Discard)
         self.set_proper_size()
         return QMessageBox.exec_(self)
 
@@ -258,12 +206,7 @@ class CustomMessageBox(QMessageBox):
             int(scrll.horizontalScrollBar().maximum() / 2))
 
 
-def add_map_layer_to_group(layer: Union[QgsVectorLayer, QgsMapLayer], group_name: str, main_group_name: str = None, important=False, position=0):
-    if not layer.isValid():
-        QgsMessageLog.logMessage(
-            f'Warstwa nieprawidłowa {layer.name()}. Wymagana interwencja.',
-            "GIAP - WODGiK",
-            Qgis.Info)
+def add_map_layer(layer, group_name, main_group_name=None, position=0):
     root = project.layerTreeRoot()
     if main_group_name and root.findGroup(main_group_name):
         group = root.findGroup(main_group_name).findGroup(group_name)
@@ -272,24 +215,10 @@ def add_map_layer_to_group(layer: Union[QgsVectorLayer, QgsMapLayer], group_name
     if not group:
         project.addMapLayer(layer)
         return
-    if layer.id() in [layer_name.layer().id() for layer_name in
-                      group.findLayers()] and not important:
-        current_layer = identify_layer_by_id(layer.id())
-        return
     project.addMapLayer(layer, False)
     if group_name:
         group.insertLayer(position, layer)
         group.setExpanded(False)
-
-
-def identify_layer_by_id(layer_id, layer_list=None):
-    if not layer_list:
-        layers_list = QgsProject.instance().mapLayers().values()
-    else:
-        layers_list = layer_list
-    for lyr in layers_list:
-        if lyr.id() == layer_id:
-            return lyr
 
 
 def normalize_path(path):

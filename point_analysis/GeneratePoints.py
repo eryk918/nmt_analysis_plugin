@@ -14,8 +14,8 @@ from qgis.utils import iface
 
 from ..point_analysis.UI.GeneratePoints_UI import GeneratePoints_UI
 from ..point_analysis.utils.update_fields import update_fields_list
-from ..utils import TmpCopyLayer, project, get_simple_progressbar, \
-    CustomMessageBox, add_map_layer_to_group, normalize_path, i_iface
+from ..utils import CreateTMPCopy, project, create_progress_bar, \
+    InfoBox, add_map_layer, normalize_path, i_iface
 
 
 class GeneratePoints:
@@ -36,6 +36,7 @@ class GeneratePoints:
         najnizsze = []
         najwyzsze = []
         layer_max = self.clone_layer(layer)
+        # TODO: naprawić klonowanie warstw
         for index in range(1, how_many_max + 1):
             QApplication.processEvents()
             layer_max.removeSelection()
@@ -92,8 +93,8 @@ class GeneratePoints:
         return clone_layer
 
     def create_tmp_layer(self, layer_name):
-        tmp = TmpCopyLayer(f"point?crs=EPSG:{self.actual_crs}", layer_name,
-                           "memory")
+        tmp = CreateTMPCopy(f"point?crs=EPSG:{self.actual_crs}", layer_name,
+                            "memory")
         tmp.set_fields(update_fields_list)
         return tmp
 
@@ -134,6 +135,7 @@ class GeneratePoints:
             selection_dialog.setCrs(crs)
             if selection_dialog.exec():
                 prj = selection_dialog.crs().postgisSrid()
+                self.actual_crs = prj
         self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         mask_layer, tmp_mask_name, mask = \
             self.check_vector_crs_and_translate(mask, prj, self.tmp_dir)
@@ -207,15 +209,18 @@ class GeneratePoints:
         group_import = project.layerTreeRoot().findGroup(group_name)
         if not group_import:
             project.layerTreeRoot().addGroup(group_name)
-        add_map_layer_to_group(layer, group_name, important=True)
+        add_map_layer(layer, group_name)
 
     def invalid_data_error(self):
-        self.progress.close()
-        CustomMessageBox(
+        if hasattr(self, "progress"):
+            self.progress.close()
+        self.clean_after_analysis()
+        InfoBox(
             self.dlg,
             'Dane są niepoprawne!\n'
             'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
-            'Analiza punktów wysokościowych nie powiodła się!'
+            'Generowanie punktów wysokościowych nie powiodło się!',
+            title='Analiza NMT'
         ).button_ok()
 
     def clean_after_analysis(self):
@@ -227,10 +232,9 @@ class GeneratePoints:
             self, input_files, mask_file, export_directory, an_min, an_max,
             q_add_to_project, radius):
         self.progress = \
-            get_simple_progressbar(100,
-                                   txt='Trwa analiza punktów wysokościowych...'
-                                   )
-        self.tmp_dir = mkdtemp(suffix=f'nmt_analysis')
+            create_progress_bar(
+                100, txt='Trwa generowanie punktów wysokościowych...')
+        self.tmp_dir = mkdtemp(suffix=f'nmt_gen_point')
         self.list_of_splitted_rasters = []
         self.list_of_vectorized_layers = []
         self.last_progress_value = 0
@@ -242,7 +246,7 @@ class GeneratePoints:
         qml_path = normalize_path(
             os.path.join(
                 self.main.plugin_dir,
-                'analyzes\\elevation_point_analysis\\utils\\punkty_wys.qml'))
+                'point_analysis\\utils\\punkty_wys.qml'))
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:
@@ -252,7 +256,7 @@ class GeneratePoints:
             self.raster_to_vector_point(raster)
             self.change_progressbar_value(
                 16 / len(self.list_of_splitted_rasters))
-        tmp_lyr = self.create_tmp_layer(f'{filename}_analiza')
+        tmp_lyr = self.create_tmp_layer(f'{filename}_pkt_wys')
         for vector in self.list_of_vectorized_layers:
             try:
                 najwyzsze, najnizsze = self.get_min_max_from_layer(
@@ -284,6 +288,6 @@ class GeneratePoints:
         self.clean_after_analysis()
         self.change_progressbar_value(5, True)
         self.dlg.close()
-        CustomMessageBox(
+        InfoBox(
             self.dlg,
-            'Analiza punktów wysokościowych zakończona.').button_ok()
+            'Generowanie punktów wysokościowych zakończone.').button_ok()
