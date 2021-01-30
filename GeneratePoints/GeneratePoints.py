@@ -12,8 +12,8 @@ from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem, \
 from qgis.gui import QgsProjectionSelectionDialog
 from qgis.utils import iface
 
-from ..point_analysis.UI.GeneratePoints_UI import GeneratePoints_UI
-from ..point_analysis.utils.update_fields import update_fields_list
+from ..GeneratePoints.UI.GeneratePoints_UI import GeneratePoints_UI
+from ..GeneratePoints.utils.update_fields import update_fields_list
 from ..utils import CreateTMPCopy, project, create_progress_bar, \
     InfoBox, add_map_layer, normalize_path, i_iface
 
@@ -246,7 +246,7 @@ class GeneratePoints:
         qml_path = normalize_path(
             os.path.join(
                 self.main.plugin_dir,
-                'point_analysis\\utils\\punkty_wys.qml'))
+                'GeneratePoints\\utils\\punkty_wys.qml'))
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:

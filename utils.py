@@ -108,7 +108,7 @@ class InfoBox(QMessageBox):
         if not stylesheet:
             self.stylesheet = """
                * {
-                    font: 10pt "Segoe UI";
+                    font: 10pt "Segoe MainMenu_UI";
                     border: 0px;
                 }
                 

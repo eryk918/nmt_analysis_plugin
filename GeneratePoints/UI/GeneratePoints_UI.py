@@ -22,10 +22,10 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
         self.wyjscie.textChanged.connect(self.enable_checkbox)
 
     def setup_dialog(self):
-        self.pushButton_zapisz.clicked.connect(self.check_if_lineedit_empty)
+        self.pushButton_zapisz.clicked.connect(self.validate_fields)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-    def check_if_lineedit_empty(self):
+    def validate_fields(self):
         if self.wejscie.filePath() and self.maska.filePath():
             self.accept()
             self.generatePoints.analysis_process(

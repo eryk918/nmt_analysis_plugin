@@ -26,7 +26,10 @@ import os
 
 from qgis.PyQt import QtWidgets
 from qgis.PyQt import uic
-from ..point_analysis.GeneratePoints import GeneratePoints
+
+from ..RasterCutter.RasterCutter import RasterCutter
+from ..GeneratePoints.GeneratePoints import GeneratePoints
+from ..utils import InfoBox
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'MainMenu_UI.ui'))
@@ -38,5 +41,24 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
         self.parent = parent
         self.plugin_dir = os.path.dirname(__file__)
+
+        # Analiza punktow wys
         self.generatePoints = GeneratePoints(self)
         self.btn_gen_points.clicked.connect(self.generatePoints.run)
+
+        # Potnij raster
+        self.rasterCutter = RasterCutter(self)
+        self.btn_split_raster.clicked.connect(self.rasterCutter.run)
+
+        # O wtyczce
+        self.btn_about.clicked.connect(self.show_info_about_plugin)
+
+    def show_info_about_plugin(self):
+        InfoBox(
+            self,
+            'Wtyczka powstała na potrzeby pracy licencjackiej.\n'
+            'Temat: "Opracowanie wtyczki QGIS umożliwiającej\n'
+            'zautomatyzowane analizy numerycznych modeli terenu"\n'
+            'Autor: Eryk Chełchowski\n',
+            title='O wtyczce - Analiza NMT'
+        ).button_ok()

@@ -27,7 +27,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from .UI.MainMenu_UI import NMTMainMenu
+from .MainMenu_UI.MainMenu_UI import NMTMainMenu
 
 
 class NMTAnalysis:
