@@ -89,13 +89,12 @@ class NMTAnalysis:
         return action
 
     def initGui(self):
-        icon_path = ':/plugins/nmt_analysis_plugin/images/icon.png'
+        icon_path = ':/plugins/nmt_analysis_plugin/images/icon_s.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Analiza NMT'),
             callback=self.run,
             parent=self.iface.mainWindow())
-
         self.first_start = True
 
     def unload(self):

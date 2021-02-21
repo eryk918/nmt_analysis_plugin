@@ -37,6 +37,10 @@
   <property name="windowTitle">
    <string>Zautomatyzowane analizy numerycznych modeli terenu</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../images/icon.png</normaloff>../images/icon.png</iconset>
+  </property>
   <property name="accessibleName">
    <string notr="true"/>
   </property>
@@ -46,7 +50,7 @@
 }
 * {
 	background-color: rgb(255, 255, 255);
-    font: 10pt &quot;Segoe UI&quot;; 
+    font: 10pt &quot;Segoe UI&quot;;
 }
 
 </string>
@@ -304,18 +308,18 @@ color: #fff;
 </string>
                  </property>
                  <property name="text">
-                  <string>Stwórz cieniowanie</string>
+                  <string>Wygeneruj model cieniowania</string>
                  </property>
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QPushButton" name="btn_gen_exposition">
+                <widget class="QPushButton" name="btn_gen_aspect">
                  <property name="styleSheet">
                   <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
 </string>
                  </property>
                  <property name="text">
-                  <string>Wygeneruj ekspozycje</string>
+                  <string>Wygeneruj model ekspozycji</string>
                  </property>
                 </widget>
                </item>
@@ -390,6 +394,21 @@ color: #fff;
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>btn_gen_points</tabstop>
+  <tabstop>btn_gen_slope</tabstop>
+  <tabstop>btn_gen_lines</tabstop>
+  <tabstop>btn_gen_hillshade</tabstop>
+  <tabstop>btn_gen_polygons</tabstop>
+  <tabstop>btn_gen_aspect</tabstop>
+  <tabstop>btn_gen_stat</tabstop>
+  <tabstop>btn_gen_model3d</tabstop>
+  <tabstop>btn_split_raster</tabstop>
+  <tabstop>btn_set_projection</tabstop>
+  <tabstop>btn_automatic</tabstop>
+  <tabstop>btn_about</tabstop>
+  <tabstop>btn_exit</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

@@ -5,18 +5,18 @@ from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 
-from ...utils import repair_comboboxes, \
-    normalize_path, get_project_config, set_project_config
+from ...utils import repair_comboboxes, normalize_path, \
+    get_project_config, set_project_config
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'GeneratePoints_UI.ui'))
+    os.path.dirname(__file__), 'GenerateAspect_UI.ui'))
 
 
-class GeneratePoints_UI(QDialog, FORM_CLASS):
-    def __init__(self, generatePoints, parent=None):
-        super(GeneratePoints_UI, self).__init__(parent)
+class GenerateAspect_UI(QDialog, FORM_CLASS):
+    def __init__(self, GenerateAspect, parent=None):
+        super(GenerateAspect_UI, self).__init__(parent)
         self.setupUi(self)
-        self.generatePoints = generatePoints
+        self.generateAspect = GenerateAspect
         repair_comboboxes(self)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
@@ -26,21 +26,17 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath() and self.maska.filePath():
+        if self.wejscie.filePath():
             self.accept()
-            self.generatePoints.analysis_process(
+            self.generateAspect.gen_aspect_process(
                 self.wejscie.lineEdit().text(),
-                self.maska.lineEdit().text(),
+                self.zindex_spinbox.value(),
                 normalize_path(self.wyjscie.text()),
-                int(self.analiza_min.text()),
-                int(self.analiza_max.text()),
-                self.add_to_project_cbbx.isChecked(),
-                int(self.analiza_radius.text())
-            )
+                self.add_to_project_cbbx.isChecked())
         else:
             QMessageBox.warning(
                 self, 'Ostrzeżenie',
-                'Wybierz poprawne ścieżki do przeprowadzenia analizy!',
+                'Wybierz poprawne ścieżki do wygenerowania cieniowania!',
                 QMessageBox.Ok)
 
     def enable_checkbox(self, text):
@@ -51,14 +47,15 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
             self.add_to_project_cbbx.setEnabled(False)
 
     def get_output_file(self):
-        path = get_project_config('NMT_analysis', 'nmt_export_path', '')
+        path = get_project_config('NMT_analysis', 'generate_hillshade', '')
         if not os.path.exists(path):
             path = ""
         filename, __ = QFileDialog.getSaveFileName(
-            self, "Zapisz plik", path, "*.shp")
+            self, "Wybierz lokalizacje do zapisu rastra modelu cieniowania",
+            path, "*.tif")
         if filename:
             self.wyjscie.setText(filename)
-        set_project_config('NMT_analysis', 'nmt_export_path',
+        set_project_config('NMT_analysis', 'generate_hillshade',
                            os.path.dirname(normalize_path(filename)))
 
     def run_dialog(self):

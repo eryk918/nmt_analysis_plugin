@@ -3,10 +3,10 @@ import os
 
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
-from qgis.PyQt.QtWidgets import QDialog, QFileDialog
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 
-from ...utils import repair_dialog_combos, InfoBox, \
-    normalize_path, get_project_config, set_project_config
+from ...utils import repair_comboboxes, normalize_path, \
+    get_project_config, set_project_config
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'RasterCutter_UI.ui'))
@@ -17,7 +17,7 @@ class RasterCutter_UI(QDialog, FORM_CLASS):
         super(RasterCutter_UI, self).__init__(parent)
         self.setupUi(self)
         self.rasterCutter = rasterCutter
-        repair_dialog_combos(self)
+        repair_comboboxes(self)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
 
@@ -34,10 +34,9 @@ class RasterCutter_UI(QDialog, FORM_CLASS):
                 normalize_path(self.wyjscie.text()),
                 self.add_to_project_cbbx.isChecked())
         else:
-            InfoBox(
-                self,
-                'Wybierz poprawne ścieżki do pocięcia rastra!'
-            ).button_ok()
+            QMessageBox.warning(self, 'Ostrzeżenie',
+                                'Wybierz poprawne ścieżki do pocięcia rastra!',
+                                QMessageBox.Ok)
 
     def enable_checkbox(self, text):
         if text:

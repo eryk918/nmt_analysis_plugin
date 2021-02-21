@@ -6,15 +6,15 @@ from tempfile import mkdtemp
 from PyQt5.QtCore import Qt
 from osgeo import gdal
 from qgis import processing
-from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtWidgets import QApplication, QMessageBox
 from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem, \
     QgsRasterLayer
 from qgis.gui import QgsProjectionSelectionDialog
 from qgis.utils import iface
 
 from ..RasterCutter.UI.RasterCutter_UI import RasterCutter_UI
-from ..utils import project, create_progress_bar, InfoBox, i_iface, \
-    add_map_layer, normalize_path
+from ..utils import project, create_progress_bar, i_iface, \
+    add_map_layer, normalize_path, change_progressbar_value
 
 
 class RasterCutter:
@@ -32,7 +32,7 @@ class RasterCutter:
 
     def split_raster_by_mask(self, input_raster, mask):
         gdal.UseExceptions()
-        self.change_progressbar_value(2)
+        change_progressbar_value(self.progress, self.last_progress_value, 2)
         raster_counter = 1
         base_raster = QgsRasterLayer(input_raster, "base")
         prj = base_raster.crs().postgisSrid()
@@ -47,7 +47,7 @@ class RasterCutter:
         self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         mask_layer, tmp_mask_name, mask = \
             self.check_vector_crs_and_translate(mask, prj, self.tmp_dir)
-        self.change_progressbar_value(4)
+        change_progressbar_value(self.progress, self.last_progress_value, 4)
         rand_field = mask_layer.fields().names()[0]
         self.number_of_features = [feature for feature in
                                    mask_layer.getFeatures()]
@@ -72,18 +72,9 @@ class RasterCutter:
                            cropToCutline=True, multithread=True)
             ds = None
             self.list_of_splitted_rasters.append(tmp_raster_filepath)
-            self.change_progressbar_value(90 / len(self.number_of_features))
+            change_progressbar_value(self.progress, self.last_progress_value,
+                                     90 / len(self.number_of_features))
             raster_counter += 1
-
-    def change_progressbar_value(self, value, last_step=False):
-        self.progress.show()
-        QApplication.processEvents()
-        self.last_progress_value += value
-        if self.last_progress_value == 100 or last_step:
-            self.progress.setValue(100)
-            self.progress.close()
-        else:
-            self.progress.setValue(self.last_progress_value)
 
     def add_rasters_to_project(self, group_name):
         group_import = project.layerTreeRoot().findGroup(group_name)
@@ -119,13 +110,13 @@ class RasterCutter:
         if hasattr(self, "progress"):
             self.progress.close()
         self.clean_after_analysis()
-        InfoBox(
+        QMessageBox.critical(
             self.dlg,
+            'Analiza NMT',
             'Dane są niepoprawne!\n'
             'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
             'Przycinanie rastra nie powiodło się!',
-            title='Analiza NMT'
-        ).button_ok()
+            QMessageBox.Ok)
 
     def clean_after_analysis(self):
         self.list_of_splitted_rasters = []
@@ -143,23 +134,23 @@ class RasterCutter:
                 export_directory not in (".", ""):
             self.export_path = normalize_path(export_directory)
             self.tmp_layers_flag = True
-        print(export_directory)
         self.list_of_splitted_rasters = []
         self.last_progress_value = 0
         self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.progress.show()
-        self.change_progressbar_value(0)
+        change_progressbar_value(self.progress, self.last_progress_value, 0)
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:
             self.invalid_data_error()
             return
-        if export_directory not in (".", ""):
-            if q_add_to_project:
-                self.add_rasters_to_project("POCIĘTE RASTRY")
-        if q_add_to_project and export_directory in (".", ""):
+        if q_add_to_project:
             self.add_rasters_to_project("POCIĘTE RASTRY")
         self.clean_after_analysis()
-        self.change_progressbar_value(4, True)
+        change_progressbar_value(self.progress, self.last_progress_value, 4,
+                                 True)
         self.dlg.close()
-        InfoBox(self.dlg, 'Przycinanie rastra zakończone.').button_ok()
+        QMessageBox.information(
+            self.dlg, 'Analiza NMT',
+            'Przycinanie rastra zakończone.',
+            QMessageBox.Ok)

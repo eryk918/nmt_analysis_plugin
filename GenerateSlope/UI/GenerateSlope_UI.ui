@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>gen_pkt</class>
- <widget class="QDialog" name="gen_pkt">
+ <class>gen_slope</class>
+ <widget class="QDialog" name="gen_slope">
   <property name="enabled">
    <bool>true</bool>
   </property>
@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>611</width>
-    <height>445</height>
+    <width>547</width>
+    <height>366</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -34,8 +34,11 @@
     <bold>false</bold>
    </font>
   </property>
+  <property name="contextMenuPolicy">
+   <enum>Qt::NoContextMenu</enum>
+  </property>
   <property name="windowTitle">
-   <string>Analizy NMT - Generowanie punktów wysokościowych</string>
+   <string>Analizy NMT - Wygeneruj model nachylenia</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -68,183 +71,6 @@
    <property name="spacing">
     <number>0</number>
    </property>
-   <item row="1" column="0" colspan="6">
-    <widget class="QFrame" name="frame_2">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="1" column="0">
-       <widget class="QGroupBox" name="groupBox_2">
-        <property name="title">
-         <string>Parametry analizy</string>
-        </property>
-        <layout class="QFormLayout" name="formLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Ilość punktów o maksymalnej wysokości</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Ilość punktów o minimalnej wysokości</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QSpinBox" name="analiza_max">
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>999999999</number>
-           </property>
-           <property name="value">
-            <number>4</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QSpinBox" name="analiza_min">
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>999999999</number>
-           </property>
-           <property name="value">
-            <number>2</number>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>Minimalna odległość punktu od punktu (metry):</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QSpinBox" name="analiza_radius">
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>999999999</number>
-           </property>
-           <property name="value">
-            <number>20</number>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="6" column="0">
-       <widget class="QGroupBox" name="groupBox_3">
-        <property name="title">
-         <string>Pliki wyjściowe</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_5">
-         <item row="0" column="1">
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QToolButton" name="output_layer_btn">
-             <property name="text">
-              <string>...</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="0">
-          <widget class="QCheckBox" name="add_to_project_cbbx">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Wczytaj plik wynikowy po zakończeniu</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLineEdit" name="wyjscie">
-           <property name="placeholderText">
-            <string>[Utwórz warstwę tymczasową]</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QGroupBox" name="groupBox">
-        <property name="title">
-         <string>Pliki wejściowe</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Lokalizacja pliku NMT</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QgsFileWidget" name="wejscie">
-           <property name="dialogTitle">
-            <string/>
-           </property>
-           <property name="filter">
-            <string>*.asc;*.tif; *.xyz</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Maska pól podstawowych</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QgsFileWidget" name="maska">
-           <property name="filter">
-            <string>*.shp</string>
-           </property>
-           <property name="defaultRoot">
-            <string/>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item row="0" column="0" colspan="6">
     <widget class="QFrame" name="frame_3">
      <property name="minimumSize">
@@ -305,7 +131,7 @@
          <number>0</number>
         </property>
         <property name="text">
-         <string>Generowanie punktów wysokościowych</string>
+         <string>Wygeneruj model nachylenia</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -313,6 +139,133 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="6">
+    <widget class="QFrame" name="frame_2">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="5" column="0">
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="title">
+         <string>Pliki wyjściowe</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QToolButton" name="output_layer_btn">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCheckBox" name="add_to_project_cbbx">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Wczytaj plik wynikowy po zakończeniu</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLineEdit" name="wyjscie">
+           <property name="placeholderText">
+            <string>[Utwórz warstwy tymczasowe]</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Pliki wejściowe</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Lokalizacja pliku NMT</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QgsFileWidget" name="wejscie">
+           <property name="dialogTitle">
+            <string/>
+           </property>
+           <property name="filter">
+            <string>*.asc;*.tif; *.xyz</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Mnożnik Z</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QDoubleSpinBox" name="zindex_spinbox">
+           <property name="decimals">
+            <number>6</number>
+           </property>
+           <property name="minimum">
+            <double>1.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>9999999.990000000223517</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="3">
+    <widget class="QPushButton" name="pushButton_zapisz">
+     <property name="minimumSize">
+      <size>
+       <width>80</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Uruchom</string>
+     </property>
     </widget>
    </item>
    <item row="2" column="5">
@@ -335,24 +288,11 @@
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>499</width>
+       <width>436</width>
        <height>20</height>
       </size>
      </property>
     </spacer>
-   </item>
-   <item row="2" column="3">
-    <widget class="QPushButton" name="pushButton_zapisz">
-     <property name="minimumSize">
-      <size>
-       <width>80</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Uruchom</string>
-     </property>
-    </widget>
    </item>
    <item row="2" column="4">
     <spacer name="horizontalSpacer_2">
@@ -381,7 +321,7 @@
   <connection>
    <sender>pushButton_anuluj</sender>
    <signal>clicked()</signal>
-   <receiver>gen_pkt</receiver>
+   <receiver>gen_slope</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

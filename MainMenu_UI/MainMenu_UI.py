@@ -26,10 +26,14 @@ import os
 
 from qgis.PyQt import QtWidgets
 from qgis.PyQt import uic
+from qgis.PyQt.QtWidgets import QMessageBox
 
-from ..RasterCutter.RasterCutter import RasterCutter
+from ..SetProjection.SetProjection import SetProjection
+from ..GenerateAspect.GenerateAspect import GenerateAspect
+from ..GenerateHillshade.GenerateHillshade import GenerateHillshade
 from ..GeneratePoints.GeneratePoints import GeneratePoints
-from ..utils import InfoBox
+from ..GenerateSlope.GenerateSlope import GenerateSlope
+from ..RasterCutter.RasterCutter import RasterCutter
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'MainMenu_UI.ui'))
@@ -42,23 +46,38 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         self.parent = parent
         self.plugin_dir = os.path.dirname(__file__)
 
-        # Analiza punktow wys
+        # Analiza punktow wysokoscowych
         self.generatePoints = GeneratePoints(self)
         self.btn_gen_points.clicked.connect(self.generatePoints.run)
+
+        # Wygeneruj model nachylenia
+        self.generateSlope = GenerateSlope(self)
+        self.btn_gen_slope.clicked.connect(self.generateSlope.run)
+
+        # Wygeneruj model cieniowania
+        self.generateHillshade = GenerateHillshade(self)
+        self.btn_gen_hillshade.clicked.connect(self.generateHillshade.run)
+
+        # Wygeneruj model ekspozycji
+        self.generateAspect = GenerateAspect(self)
+        self.btn_gen_aspect.clicked.connect(self.generateAspect.run)
 
         # Potnij raster
         self.rasterCutter = RasterCutter(self)
         self.btn_split_raster.clicked.connect(self.rasterCutter.run)
 
+        # Nadaj/przypisz odwzorowanie
+        self.setProjection = SetProjection(self)
+        self.btn_set_projection.clicked.connect(self.setProjection.run)
+
         # O wtyczce
         self.btn_about.clicked.connect(self.show_info_about_plugin)
 
     def show_info_about_plugin(self):
-        InfoBox(
-            self,
+        QMessageBox.information(
+            self, 'O wtyczce - Analiza NMT',
             'Wtyczka powstała na potrzeby pracy licencjackiej.\n'
             'Temat: "Opracowanie wtyczki QGIS umożliwiającej\n'
             'zautomatyzowane analizy numerycznych modeli terenu"\n'
             'Autor: Eryk Chełchowski\n',
-            title='O wtyczce - Analiza NMT'
-        ).button_ok()
+            QMessageBox.Ok)

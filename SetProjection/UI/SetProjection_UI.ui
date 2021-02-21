@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>gen_pkt</class>
- <widget class="QDialog" name="gen_pkt">
+ <class>set_proj</class>
+ <widget class="QDialog" name="set_proj">
   <property name="enabled">
    <bool>true</bool>
   </property>
@@ -34,8 +34,11 @@
     <bold>false</bold>
    </font>
   </property>
+  <property name="contextMenuPolicy">
+   <enum>Qt::NoContextMenu</enum>
+  </property>
   <property name="windowTitle">
-   <string>Analizy NMT - Potnij raster</string>
+   <string>Analizy NMT - Nadaj/przypisz odwzorowanie</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -128,7 +131,7 @@
          <number>0</number>
         </property>
         <property name="text">
-         <string>Potnij raster</string>
+         <string>Nadaj/przypisz odwzorowanie</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -193,12 +196,8 @@
          <string>Pliki wejściowe</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Lokalizacja pliku NMT</string>
-           </property>
-          </widget>
+         <item row="5" column="1">
+          <widget class="QgsProjectionSelectionWidget" name="dest_proj"/>
          </item>
          <item row="1" column="1">
           <widget class="QgsFileWidget" name="wejscie">
@@ -206,24 +205,21 @@
             <string/>
            </property>
            <property name="filter">
-            <string>*.asc;*.tif; *.xyz</string>
+            <string>*.asc;*.tif; *.xyz, *.shp, *.gpkg</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_4">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Maska pól podstawowych</string>
+            <string>Lokalizacja pliku wejściowego</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
-          <widget class="QgsFileWidget" name="maska">
-           <property name="filter">
-            <string>*.shp</string>
-           </property>
-           <property name="defaultRoot">
-            <string/>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Odwzorowanie docelowe</string>
            </property>
           </widget>
          </item>
@@ -306,13 +302,18 @@
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
   </customwidget>
+  <customwidget>
+   <class>QgsProjectionSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsprojectionselectionwidget.h</header>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
   <connection>
    <sender>pushButton_anuluj</sender>
    <signal>clicked()</signal>
-   <receiver>gen_pkt</receiver>
+   <receiver>set_proj</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -322,6 +323,22 @@
     <hint type="destinationlabel">
      <x>368</x>
      <y>322</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>wejscie</sender>
+   <signal>fileChanged(QString)</signal>
+   <receiver>wyjscie</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>361</x>
+     <y>85</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>255</x>
+     <y>217</y>
     </hint>
    </hints>
   </connection>

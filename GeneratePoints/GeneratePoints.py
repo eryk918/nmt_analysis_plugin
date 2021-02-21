@@ -6,7 +6,7 @@ from tempfile import mkdtemp
 from PyQt5.QtCore import Qt
 from osgeo import gdal
 from qgis import processing
-from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtWidgets import QApplication, QMessageBox
 from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem, \
     QgsRasterLayer, QgsVectorFileWriter
 from qgis.gui import QgsProjectionSelectionDialog
@@ -14,8 +14,8 @@ from qgis.utils import iface
 
 from ..GeneratePoints.UI.GeneratePoints_UI import GeneratePoints_UI
 from ..GeneratePoints.utils.update_fields import update_fields_list
-from ..utils import CreateTMPCopy, project, create_progress_bar, \
-    InfoBox, add_map_layer, normalize_path, i_iface
+from ..utils import CreateTemporaryLayer, project, create_progress_bar, \
+    add_map_layer, normalize_path, i_iface, change_progressbar_value
 
 
 class GeneratePoints:
@@ -93,8 +93,9 @@ class GeneratePoints:
         return clone_layer
 
     def create_tmp_layer(self, layer_name):
-        tmp = CreateTMPCopy(f"point?crs=EPSG:{self.actual_crs}", layer_name,
-                            "memory")
+        tmp = CreateTemporaryLayer(f"point?crs=EPSG:{self.actual_crs}",
+                                   layer_name,
+                                   "memory")
         tmp.set_fields(update_fields_list)
         return tmp
 
@@ -124,7 +125,7 @@ class GeneratePoints:
 
     def split_raster_by_mask(self, input_raster, mask):
         gdal.UseExceptions()
-        self.change_progressbar_value(2)
+        change_progressbar_value(self.progress, self.last_progress_value, 2)
         raster_counter = 1
         base_raster = QgsRasterLayer(input_raster, "base")
         prj = base_raster.crs().postgisSrid()
@@ -139,7 +140,7 @@ class GeneratePoints:
         self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         mask_layer, tmp_mask_name, mask = \
             self.check_vector_crs_and_translate(mask, prj, self.tmp_dir)
-        self.change_progressbar_value(4)
+        change_progressbar_value(self.progress, self.last_progress_value, 4)
         rand_field = mask_layer.fields().names()[0]
         self.number_of_features = [feature for feature in
                                    mask_layer.getFeatures()]
@@ -158,7 +159,8 @@ class GeneratePoints:
                            cropToCutline=True, multithread=True)
             ds = None
             self.list_of_splitted_rasters.append(tmp_raster_filepath)
-            self.change_progressbar_value(22 / len(self.number_of_features))
+            change_progressbar_value(self.progress, self.last_progress_value,
+                                     22 / len(self.number_of_features))
             raster_counter += 1
 
     def change_progressbar_value(self, value, last_step=False):
@@ -215,13 +217,12 @@ class GeneratePoints:
         if hasattr(self, "progress"):
             self.progress.close()
         self.clean_after_analysis()
-        InfoBox(
-            self.dlg,
+        QMessageBox.critical(
+            self.dlg, 'Analiza NMT',
             'Dane są niepoprawne!\n'
             'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
             'Generowanie punktów wysokościowych nie powiodło się!',
-            title='Analiza NMT'
-        ).button_ok()
+            QMessageBox.Ok)
 
     def clean_after_analysis(self):
         self.list_of_splitted_rasters = []
@@ -240,7 +241,7 @@ class GeneratePoints:
         self.last_progress_value = 0
         self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.progress.show()
-        self.change_progressbar_value(0)
+        change_progressbar_value(self.progress, self.last_progress_value, 0)
         filename = input_files.split('\\')[-1].strip(
             input_files.split("\\")[-1].split('.')[-1])[:-1]
         qml_path = normalize_path(
@@ -254,8 +255,8 @@ class GeneratePoints:
             return
         for raster in self.list_of_splitted_rasters:
             self.raster_to_vector_point(raster)
-            self.change_progressbar_value(
-                16 / len(self.list_of_splitted_rasters))
+            change_progressbar_value(self.progress, self.last_progress_value,
+                                     16 / len(self.list_of_splitted_rasters))
         tmp_lyr = self.create_tmp_layer(f'{filename}_pkt_wys')
         for vector in self.list_of_vectorized_layers:
             try:
@@ -265,8 +266,8 @@ class GeneratePoints:
                 self.invalid_data_error()
                 return
             self.add_and_set_final_features(tmp_lyr, najnizsze, najwyzsze)
-            self.change_progressbar_value(46 / len(
-                self.list_of_vectorized_layers))
+            change_progressbar_value(self.progress, self.last_progress_value,
+                                     46 / len(self.list_of_vectorized_layers))
         tmp_lyr.loadNamedStyle(qml_path)
         tmp_lyr.triggerRepaint()
         if export_directory not in (".", ""):
@@ -277,7 +278,8 @@ class GeneratePoints:
                                                               "ESRI Shapefile")
             _writer = None
             shutil.copy(qml_path, export_directory.replace(".shp", ".qml"))
-            self.change_progressbar_value(5)
+            change_progressbar_value(self.progress, self.last_progress_value,
+                                     5)
             if q_add_to_project:
                 self.add_vector_to_project(
                     QgsVectorLayer(export_directory,
@@ -286,8 +288,10 @@ class GeneratePoints:
         if q_add_to_project and export_directory in (".", ""):
             self.add_vector_to_project(tmp_lyr, "PUNKTY_WYSOKOSCIOWE")
         self.clean_after_analysis()
-        self.change_progressbar_value(5, True)
+        change_progressbar_value(self.progress, self.last_progress_value, 5,
+                                 True)
         self.dlg.close()
-        InfoBox(
-            self.dlg,
-            'Generowanie punktów wysokościowych zakończone.').button_ok()
+        QMessageBox.information(
+            self.dlg, 'Analiza NMT',
+            'Generowanie punktów wysokościowych zakończone.',
+            QMessageBox.Ok)
