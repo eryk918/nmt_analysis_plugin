@@ -183,7 +183,7 @@
          <item row="0" column="0">
           <widget class="QLineEdit" name="wyjscie">
            <property name="placeholderText">
-            <string>[Utwórz warstwy tymczasowe]</string>
+            <string>[Utwórz warstwę tymczasową]</string>
            </property>
           </widget>
          </item>
@@ -205,7 +205,10 @@
             <string/>
            </property>
            <property name="filter">
-            <string>*.asc;*.tif; *.xyz, *.shp, *.gpkg</string>
+            <string>*.asc;*.tif; *.xyz; *.shp; *.gpkg</string>
+           </property>
+           <property name="storageMode">
+            <enum>QgsFileWidget::GetMultipleFiles</enum>
            </property>
           </widget>
          </item>

@@ -9,14 +9,14 @@ from ...utils import repair_comboboxes, normalize_path, \
     get_project_config, set_project_config
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'SetProjection_UI.ui'))
+    os.path.dirname(__file__), 'GenerateStatistics_UI.ui'))
 
 
-class SetProjection_UI(QDialog, FORM_CLASS):
-    def __init__(self, setProjection, parent=None):
-        super(SetProjection_UI, self).__init__(parent)
+class GenerateStatistics_UI(QDialog, FORM_CLASS):
+    def __init__(self, GenerateStatistics, parent=None):
+        super(GenerateStatistics_UI, self).__init__(parent)
         self.setupUi(self)
-        self.setProjection = setProjection
+        self.generateStatistics = GenerateStatistics
         repair_comboboxes(self)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
@@ -26,20 +26,16 @@ class SetProjection_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath() and \
-                self.dest_proj.crs().postgisSrid() != 0:
+        if self.wejscie.filePath():
             self.accept()
-            self.setProjection.set_proj_process(
-                self.wejscie.splitFilePaths(
-                    self.wejscie.lineEdit().text()),
-                self.dest_proj.crs(),
+            self.generateStatistics.generate_statistics_process(
+                self.wejscie.splitFilePaths(self.wejscie.lineEdit().text()),
                 normalize_path(self.wyjscie.text()),
                 self.add_to_project_cbbx.isChecked())
         else:
             QMessageBox.warning(
-                self, 'Ostrzeżenie',
-                'Sprawdź poprawność danych wejściowych i ich odwzorowań!\n',
-                QMessageBox.Ok)
+                self, 'Ostrzeżenie', 'Sprawdź poprawność danych wejściowych!\n'
+                , QMessageBox.Ok)
 
     def enable_checkbox(self, text):
         if text:
@@ -50,15 +46,16 @@ class SetProjection_UI(QDialog, FORM_CLASS):
 
     def get_output_file(self):
         if self.wejscie.lineEdit().text():
-            path = get_project_config('NMT_analysis', 'set_projection', '')
+            path = get_project_config(
+                'NMT_analysis', 'generate_statistics', '')
             if not os.path.exists(path):
                 path = ""
             filename = QFileDialog.getExistingDirectory(
-                self, "Wybierz lokalizacje do zapisu przetłumaczonych warstw",
+                self, "Wybierz lokalizacje do zapisu wygenerowanych statystyk",
                 path)
             if filename:
                 self.wyjscie.setText(filename)
-            set_project_config('NMT_analysis', 'set_projection',
+            set_project_config('NMT_analysis', 'generate_statistics',
                                os.path.dirname(normalize_path(filename)))
         else:
             QMessageBox.warning(

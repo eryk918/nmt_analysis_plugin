@@ -2,11 +2,14 @@
 
 import os
 import re
+import subprocess
+import sys
 from tempfile import mkstemp
 
 from PyQt5.QtCore import Qt
+from qgis.PyQt.QtCore import pyqtSignal, QObject
 from qgis.PyQt.QtWidgets import QFontComboBox, \
-    QComboBox, QApplication, QProgressDialog
+    QComboBox, QApplication, QProgressDialog, QMessageBox
 from qgis.core import QgsProject, QgsVectorLayer, \
     QgsFeature, QgsRasterLayer
 from qgis.utils import iface
@@ -138,5 +141,117 @@ def add_rasters_to_project(group_name, list_of_rasters):
         add_map_layer(rlayer, group_name)
 
 
+def add_vectors_to_project(group_name, list_of_vectors):
+    QApplication.processEvents()
+    group_import = project.layerTreeRoot().findGroup(group_name)
+    if not group_import:
+        project.layerTreeRoot().addGroup(group_name)
+    for vector_path in list_of_vectors:
+        QApplication.processEvents()
+        vlayer = QgsVectorLayer(
+            vector_path, os.path.basename(vector_path), "ogr")
+        add_map_layer(vlayer, group_name)
+
+
+def open_other_files(filepath, send_by=None):
+    if sys.platform.startswith('darwin'):
+        subprocess.call(('open', filepath))
+    elif os.name == 'nt':
+        try:
+            os.startfile(filepath)
+        except WindowsError:
+            ext = os.path.splitext(filepath)[-1]
+            QMessageBox.critical(
+                None, 'Analiza NMT',
+                f'''Błąd przy otwieraniu pliku z rozszerzeniem *.{ext}!
+Zainstaluj program obsługujący format *.{ext} i spróbuj ponownie.''',
+                QMessageBox.Ok)
+            return
+    elif os.name == 'posix':
+        subprocess.call(('xdg-open', filepath))
+
+
 def normalize_path(path):
     return os.path.normpath(os.sep.join(re.split(r'\\|/', path)))
+
+
+# class Importer(QObject):
+#     finished = pyqtSignal(str)
+#     progress = pyqtSignal(float)
+#     debug_print = pyqtSignal(str)
+#
+#     def run_import(self, cmd, file):
+#         QApplication.processEvents()
+#         errors = False
+#         self.error_messages_list = []
+#         ret = runexternal_out_and_err(cmd)
+#         QApplication.processEvents()
+#         if ret[1]:
+#             errors = True
+#             if "ERROR 1:" in ret[1].strip():
+#                 errors = False
+#             elif ret[1].strip() == 'ERROR ret code = -9':
+#                 self.error_messages_list.append(
+#                     f"Import zakończony przez użytkownika")
+#             elif 'Warning' in ret[1]:
+#                 errors = False
+#             else:
+#                 self.error_messages_list.append(
+#                     f"Wystąpiły błędy importu dla pliku {file} . Komunikaty procesu:\n{ret[1]}")
+#
+#         if not errors:
+#             self.finished.emit(ret[0])
+#         else:
+#             self.finished.emit(ret[0])
+#             raise Exception('\n\n\n'.join(self.error_messages_list))
+#         self.kill()
+#
+#     def emitProgress(self, dfComplete, pszMessage, pProgressArg):
+#         self.progress.emit(dfComplete * 100.0)
+#         return True
+#
+#     def debugPrint(self, text):
+#         self.debug_print.emit(str(text))
+#
+#     def kill(self):
+#         self.killed = True
+#
+#
+# def runexternal_out_and_err(cmd, tracking_func=None) -> Any:
+#     if os.name == "posix":
+#         p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
+#                              stderr=subprocess.PIPE, preexec_fn=os.setsid)
+#     else:
+#         DETACHED_PROCESS = 0x00000008
+#         p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
+#                              stderr=subprocess.PIPE,
+#                              creationflags=DETACHED_PROCESS)
+#     if tracking_func:
+#         tracking_func.process_id = p
+#
+#     if p.stdout is not None:
+#         q_stdout = Queue()
+#         t_stdout = Thread(target=read_in_thread, args=(p.stdout, q_stdout))
+#         t_stdout.start()
+#     else:
+#         q_stdout = None
+#         ret_stdout = ''
+#
+#     if p.stderr is not None:
+#         q_stderr = Queue()
+#         t_stderr = Thread(target=read_in_thread, args=(p.stderr, q_stderr))
+#         t_stderr.start()
+#     else:
+#         q_stderr = None
+#         ret_stderr = ''
+#
+#     if q_stdout is not None:
+#         ret_stdout = q_stdout.get().decode('utf-8')
+#     if q_stderr is not None:
+#         ret_stderr = q_stderr.get().decode('utf-8')
+#
+#     waitcode = p.wait()
+#     if waitcode != 0:
+#         ret_stderr = ret_stderr + '\nERROR ret code = %d' % waitcode
+#
+#     return (ret_stdout, ret_stderr)

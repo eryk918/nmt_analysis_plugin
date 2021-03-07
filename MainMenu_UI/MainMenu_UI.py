@@ -28,12 +28,13 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QMessageBox
 
-from ..SetProjection.SetProjection import SetProjection
 from ..GenerateAspect.GenerateAspect import GenerateAspect
 from ..GenerateHillshade.GenerateHillshade import GenerateHillshade
 from ..GeneratePoints.GeneratePoints import GeneratePoints
 from ..GenerateSlope.GenerateSlope import GenerateSlope
+from ..GenerateStatistics.GenerateStatistics import GenerateStatistics
 from ..RasterCutter.RasterCutter import RasterCutter
+from ..SetProjection.SetProjection import SetProjection
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'MainMenu_UI.ui'))
@@ -49,6 +50,10 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         # Analiza punktow wysokoscowych
         self.generatePoints = GeneratePoints(self)
         self.btn_gen_points.clicked.connect(self.generatePoints.run)
+
+        # Generowanie statystyki
+        self.generateStatistics = GenerateStatistics(self)
+        self.btn_gen_stat.clicked.connect(self.generateStatistics.run)
 
         # Wygeneruj model nachylenia
         self.generateSlope = GenerateSlope(self)

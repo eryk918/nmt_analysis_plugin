@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+from datetime import datetime
 from tempfile import mkdtemp
 
 from PyQt5.QtCore import Qt
 from qgis import processing
 from qgis.PyQt.QtWidgets import QMessageBox, QApplication
 
-from ..SetProjection.UI.SetProjection_UI import SetProjection_UI
-from ..utils import project, create_progress_bar, i_iface, \
-    normalize_path, add_rasters_to_project, add_vectors_to_project
+from ..GenerateStatistics.UI.GenerateStatistics_UI import GenerateStatistics_UI
+from ..utils import project, create_progress_bar, i_iface, normalize_path, \
+    open_other_files
 
 
-class SetProjection:
+class GenerateStatistics:
     def __init__(self, parent):
         self.main = parent
         self.iface = i_iface
@@ -21,7 +22,7 @@ class SetProjection:
         self.actual_crs = project.crs().postgisSrid()
 
     def run(self):
-        self.dlg = SetProjection_UI(self)
+        self.dlg = GenerateStatistics_UI(self)
         self.dlg.setup_dialog()
         self.dlg.run_dialog()
 
@@ -31,68 +32,64 @@ class SetProjection:
             self.dlg,
             'Analiza NMT',
             'Dane są niepoprawne!\n'
-            'Nadawanie odwzorowania nie powiodło się!',
+            'Generowanie statystyki nie powiodło się!',
             QMessageBox.Ok)
 
     def clean_after_analysis(self):
         QApplication.processEvents()
         if hasattr(self, "progress"):
             self.progress.close()
-        self.list_of_layers = []
+        self.list_of_files = []
         if not self.tmp_layers_flag:
             shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
-    def set_projection(self, input_layer, dest_crs):
+    def generate_statistics(self, input_layer):
         if not self.tmp_layers_flag:
             tmp_layer_filepath = os.path.join(
-                self.tmp_dir, f'{os.path.basename(input_layer)}')
+                self.tmp_dir, f'{os.path.basename(input_layer)}.html')
         else:
             tmp_layer_filepath = os.path.join(
-                self.export_path, f'{os.path.basename(input_layer)}')
+                self.export_path, f'{os.path.basename(input_layer)}.html')
+        if os.path.exists(tmp_layer_filepath):
+            tmp_path = os.path.splitext(tmp_layer_filepath)[0]
+            tmp_layer_filepath = \
+                f'{tmp_path}_{datetime.now().strftime("%Y-%m-%d_%H_%M_%S")}.html'
+        processing.run(
+            'qgis:rasterlayerstatistics',
+            {'INPUT': input_layer, 'OUTPUT_HTML_FILE': tmp_layer_filepath,
+             'BAND': 1})
+        self.list_of_files.append(tmp_layer_filepath)
 
-        if os.path.splitext(input_layer)[-1] in ('.shp', '.gpkg'):
-            processing.run(
-                'qgis:reprojectlayer',
-                {'INPUT': input_layer, 'OUTPUT': tmp_layer_filepath,
-                 'TARGET_CRS': f'EPSG:{dest_crs.postgisSrid()}'})
-        else:
-            processing.run(
-                'gdal:translate',
-                {'INPUT': input_layer, 'OUTPUT': tmp_layer_filepath,
-                 'TARGET_CRS': f'EPSG:{dest_crs.postgisSrid()}'})
-        self.list_of_layers.append(tmp_layer_filepath)
-
-    def set_proj_process(self, input_files, dest_crs,
-                         export_directory, q_add_to_project):
+    def generate_statistics_process(self, input_files, export_directory,
+                                    q_add_to_project):
         self.progress = create_progress_bar(
-            0, txt='Trwa nadawanie odwzorowania...')
+            0, txt='Trwa generowanie statystyki...')
         QApplication.processEvents()
-        self.tmp_dir = mkdtemp(suffix=f'nmt_set_projection')
+        self.tmp_dir = mkdtemp(suffix=f'nmt_generate_statistics')
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
                 export_directory != ".":
             self.export_path = normalize_path(export_directory)
             self.tmp_layers_flag = True
-        self.list_of_layers = []
+        self.list_of_files = []
         self.last_progress_value = 0
-        self.layer_type = None
         self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.progress.show()
         QApplication.processEvents()
         for input_layers in input_files:
             try:
-                self.set_projection(input_layers, dest_crs)
+                self.generate_statistics(input_layers)
             except RuntimeError:
                 self.invalid_data_error()
                 return
         if q_add_to_project:
-            for lyr in self.list_of_layers:
-                if os.path.splitext(lyr)[-1] in ('.shp', '.gpkg'):
-                    add_vectors_to_project("PRZETŁUMACZONE_WARSTWY", [lyr])
-                else:
-                    add_rasters_to_project("PRZETŁUMACZONE_WARSTWY", [lyr])
-        self.clean_after_analysis()
+            for file in self.list_of_files:
+                open_other_files(file)
         self.dlg.close()
+        QApplication.processEvents()
+        if hasattr(self, "progress"):
+            self.progress.close()
+        self.list_of_files = []
         QMessageBox.information(
             self.dlg, 'Analiza NMT',
-            'Nadawanie odwzorowania zakończone.', QMessageBox.Ok)
+            'Generowanie statystyki zakończone.', QMessageBox.Ok)

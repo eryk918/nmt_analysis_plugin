@@ -105,7 +105,7 @@ class NMTAnalysis:
             self.iface.removeToolBarIcon(action)
 
     def run(self):
-        if self.first_start == True:
+        if self.first_start:
             self.first_start = False
             self.dlg = NMTMainMenu()
 
