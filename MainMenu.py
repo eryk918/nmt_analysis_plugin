@@ -23,6 +23,7 @@
 """
 import os.path
 
+from qgis.PyQt import QtGui
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -59,8 +60,6 @@ class NMTAnalysis:
             text,
             callback,
             enabled_flag=True,
-            add_to_menu=True,
-            add_to_toolbar=True,
             status_tip=None,
             whats_this=None,
             parent=None):
@@ -76,23 +75,16 @@ class NMTAnalysis:
         if whats_this is not None:
             action.setWhatsThis(whats_this)
 
-        if add_to_toolbar:
-            self.iface.addToolBarIcon(action)
-
-        if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
-
+        self.iface.addToolBarIcon(action)
+        self.iface.addPluginToMenu(self.menu, action)
         self.actions.append(action)
-
         return action
 
     def initGui(self):
-        icon_path = ':/plugins/nmt_analysis_plugin/images/icon_s.png'
+        icon_path = os.path.join(self.plugin_dir, 'images/icon_s.png')
         self.add_action(
             icon_path,
-            text=self.tr(u'Analiza NMT'),
+            text=self.tr('Analiza NMT'),
             callback=self.run,
             parent=self.iface.mainWindow())
         self.first_start = True
@@ -100,14 +92,18 @@ class NMTAnalysis:
     def unload(self):
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&Analiza NMT'),
+                self.tr('Analiza NMT'),
                 action)
             self.iface.removeToolBarIcon(action)
 
     def run(self):
         if self.first_start:
             self.first_start = False
-            self.dlg = NMTMainMenu()
+            self.dlg = NMTMainMenu(plugin_path=self.plugin_dir)
+            self.dlg.setWindowIcon(
+                QtGui.QIcon(os.path.join(self.plugin_dir, 'images/icon.png')))
+        else:
+            self.dlg.btn_gen_model3d.setEnabled(True)
 
         self.dlg.show()
         result = self.dlg.exec_()

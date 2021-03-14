@@ -2,7 +2,7 @@
 import os
 
 from PyQt5.QtCore import Qt
-from qgis.PyQt import uic
+from qgis.PyQt import uic, QtGui
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 from ...utils import repair_comboboxes, normalize_path, \
@@ -18,6 +18,7 @@ class GenerateAspect_UI(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.generateAspect = GenerateAspect
         repair_comboboxes(self)
+        self.setWindowIcon(self.generateAspect.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
 

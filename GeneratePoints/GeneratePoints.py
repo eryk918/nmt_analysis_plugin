@@ -247,7 +247,7 @@ class GeneratePoints:
         qml_path = normalize_path(
             os.path.join(
                 self.main.plugin_dir,
-                'GeneratePoints\\utils\\punkty_wys.qml'))
+                '..\\GeneratePoints\\utils\\punkty_wys.qml'))
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:

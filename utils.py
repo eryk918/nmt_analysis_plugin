@@ -130,7 +130,7 @@ def add_map_layer(layer, group_name, main_group_name=None, position=0):
         group.setExpanded(False)
 
 
-def add_rasters_to_project(group_name, list_of_rasters):
+def add_rasters_to_project(group_name, list_of_rasters, symbology=None):
     QApplication.processEvents()
     group_import = project.layerTreeRoot().findGroup(group_name)
     if not group_import:
@@ -139,6 +139,9 @@ def add_rasters_to_project(group_name, list_of_rasters):
         QApplication.processEvents()
         rlayer = QgsRasterLayer(raster_path, os.path.basename(raster_path))
         add_map_layer(rlayer, group_name)
+        if symbology:
+            rlayer.loadNamedStyle(symbology)
+            rlayer.triggerRepaint()
 
 
 def add_vectors_to_project(group_name, list_of_vectors):

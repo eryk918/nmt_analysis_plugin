@@ -61,6 +61,9 @@ class GenerateAspect:
         self.progress = create_progress_bar(
             0, txt='Trwa generowanie modelu ekspozycji...')
         QApplication.processEvents()
+        qml_path = normalize_path(
+            os.path.join(self.main.plugin_dir,
+                         '..\\GenerateAspect\\style.qml'))
         self.tmp_dir = mkdtemp(suffix=f'nmt_generate_aspect')
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
@@ -79,7 +82,7 @@ class GenerateAspect:
             return
         if q_add_to_project:
             add_rasters_to_project("EKSPOZYCJA",
-                                   self.list_of_splitted_rasters)
+                                   self.list_of_splitted_rasters,  qml_path)
         self.clean_after_analysis()
         self.dlg.close()
         QMessageBox.information(

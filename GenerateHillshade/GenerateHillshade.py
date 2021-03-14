@@ -63,6 +63,9 @@ class GenerateHillshade:
             0, txt='Trwa generowanie modelu cieniowania...')
         QApplication.processEvents()
         self.tmp_dir = mkdtemp(suffix=f'nmt_generate_hillshade')
+        qml_path = normalize_path(
+            os.path.join(self.main.plugin_dir,
+                         '..\\GenerateHillshade\\style.qml'))
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
                 export_directory != ".":
@@ -80,7 +83,7 @@ class GenerateHillshade:
             return
         if q_add_to_project:
             add_rasters_to_project("CIENIOWANIE",
-                                   self.list_of_splitted_rasters)
+                                   self.list_of_splitted_rasters, qml_path)
         self.clean_after_analysis()
         self.dlg.close()
         QMessageBox.information(

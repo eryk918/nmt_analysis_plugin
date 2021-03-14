@@ -18,6 +18,7 @@ class GenerateSlope_UI(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.generateSlope = generateSlope
         repair_comboboxes(self)
+        self.setWindowIcon(self.generateSlope.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
 

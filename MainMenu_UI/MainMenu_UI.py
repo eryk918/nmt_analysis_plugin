@@ -23,11 +23,13 @@
 """
 
 import os
+import sys
 
-from qgis.PyQt import QtWidgets
+from qgis.PyQt import QtWidgets, QtGui
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QMessageBox
 
+from ..Generate3DModel.Generate3DModel import Generate3DModel
 from ..GenerateAspect.GenerateAspect import GenerateAspect
 from ..GenerateHillshade.GenerateHillshade import GenerateHillshade
 from ..GeneratePoints.GeneratePoints import GeneratePoints
@@ -35,17 +37,24 @@ from ..GenerateSlope.GenerateSlope import GenerateSlope
 from ..GenerateStatistics.GenerateStatistics import GenerateStatistics
 from ..RasterCutter.RasterCutter import RasterCutter
 from ..SetProjection.SetProjection import SetProjection
+from ..utils import normalize_path
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'MainMenu_UI.ui'))
 
 
 class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, plugin_path=''):
         super(NMTMainMenu, self).__init__(parent)
         self.setupUi(self)
         self.parent = parent
+        self.plugin_path = plugin_path
+        self.icon_path = normalize_path(
+            os.path.join(self.plugin_path, 'images//icon.png'))
+        self.icon = QtGui.QIcon(self.icon_path)
         self.plugin_dir = os.path.dirname(__file__)
+        self.qgis2threejs_exists = True
+        self.q23js = None
 
         # Analiza punktow wysokoscowych
         self.generatePoints = GeneratePoints(self)
@@ -66,6 +75,16 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         # Wygeneruj model ekspozycji
         self.generateAspect = GenerateAspect(self)
         self.btn_gen_aspect.clicked.connect(self.generateAspect.run)
+
+        # Wygeneruj model 3D
+        self.qgis2threejs_path = normalize_path(
+            os.path.join(self.plugin_path, '..//Qgis2threejs'))
+        if os.path.exists(self.qgis2threejs_path) and self.qgis2threejs_exists:
+            sys.path.insert(1, self.qgis2threejs_path)
+            import Qgis2threejs
+            self.q23js = Qgis2threejs
+        self.generate3DModel = Generate3DModel(self)
+        self.btn_gen_model3d.clicked.connect(self.generate3DModel.run)
 
         # Potnij raster
         self.rasterCutter = RasterCutter(self)
