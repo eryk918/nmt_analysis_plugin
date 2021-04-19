@@ -97,8 +97,8 @@ def create_progress_bar(max_len, title='Proszę czekać',
     progress_bar.setValue(start_val)
     progress_bar.setAutoClose(auto_close)
     progress_bar.setCancelButton(cancel_btn)
-    progress_bar.setStyleSheet(
-        'QProgressBar::chunk{background:qlineargradient(spread:reflect, x1:0, y1:0.494, x2:0, y2:1, stop:0.269231 rgba(55, 165, 126, 255), stop:1 rgba(38, 115, 85, 255));}*{text-align:center; color:#000;}')
+    # progress_bar.setStyleSheet(
+    #     'QProgressBar::chunk{background:qlineargradient(spread:reflect, x1:0, y1:0.494, x2:0, y2:1, stop:0.269231 rgba(55, 165, 126, 255), stop:1 rgba(38, 115, 85, 255));}*{text-align:center; color:#000;}')
     QApplication.processEvents()
     return progress_bar
 
@@ -124,6 +124,7 @@ def add_map_layer(layer, group_name, main_group_name=None, position=0):
     if not group:
         project.addMapLayer(layer)
         return
+    QApplication.processEvents()
     project.addMapLayer(layer, False)
     if group_name:
         group.insertLayer(position, layer)
@@ -151,8 +152,8 @@ def add_vectors_to_project(group_name, list_of_vectors):
         project.layerTreeRoot().addGroup(group_name)
     for vector_path in list_of_vectors:
         QApplication.processEvents()
-        vlayer = QgsVectorLayer(
-            vector_path, os.path.basename(vector_path), "ogr")
+        vlayer = QgsVectorLayer(vector_path,
+                                os.path.basename(vector_path), "ogr")
         add_map_layer(vlayer, group_name)
 
 

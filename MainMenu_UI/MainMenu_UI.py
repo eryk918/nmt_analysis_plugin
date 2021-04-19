@@ -29,6 +29,7 @@ from qgis.PyQt import QtWidgets, QtGui
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QMessageBox
 
+from ..GeneratePolygons.GeneratePolygons import GeneratePolygons
 from ..Generate3DModel.Generate3DModel import Generate3DModel
 from ..GenerateAspect.GenerateAspect import GenerateAspect
 from ..GenerateHillshade.GenerateHillshade import GenerateHillshade
@@ -59,6 +60,10 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         # Analiza punktow wysokoscowych
         self.generatePoints = GeneratePoints(self)
         self.btn_gen_points.clicked.connect(self.generatePoints.run)
+
+        # Generowanie poligonów
+        self.generatePolygons = GeneratePolygons(self)
+        self.btn_gen_polygons.clicked.connect(self.generatePolygons.run)
 
         # Generowanie statystyki
         self.generateStatistics = GenerateStatistics(self)

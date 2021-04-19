@@ -335,17 +335,6 @@ color: #fff;
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QPushButton" name="btn_gen_lines">
-                 <property name="styleSheet">
-                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>Poprowadź linie</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
                 <widget class="QPushButton" name="btn_gen_polygons">
                  <property name="styleSheet">
                   <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
@@ -353,6 +342,17 @@ color: #fff;
                  </property>
                  <property name="text">
                   <string>Wygeneruj poligony</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QPushButton" name="btn_gen_lines">
+                 <property name="styleSheet">
+                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+                 </property>
+                 <property name="text">
+                  <string>Poprowadź linie</string>
                  </property>
                 </widget>
                </item>
@@ -397,9 +397,9 @@ color: #fff;
  <tabstops>
   <tabstop>btn_gen_points</tabstop>
   <tabstop>btn_gen_slope</tabstop>
-  <tabstop>btn_gen_lines</tabstop>
-  <tabstop>btn_gen_hillshade</tabstop>
   <tabstop>btn_gen_polygons</tabstop>
+  <tabstop>btn_gen_hillshade</tabstop>
+  <tabstop>btn_gen_lines</tabstop>
   <tabstop>btn_gen_aspect</tabstop>
   <tabstop>btn_gen_stat</tabstop>
   <tabstop>btn_gen_model3d</tabstop>
