@@ -32,8 +32,8 @@ class SetProjection_UI(QDialog, FORM_CLASS):
             self.accept()
             self.setProjection.set_proj_process(
                 self.wejscie.splitFilePaths(
-                    self.wejscie.lineEdit().text()),
-                self.dest_proj.crs(),
+                    self.wejscie.lineEdit().text())[0],
+                self.dest_proj.crs().postgisSrid(),
                 normalize_path(self.wyjscie.text()),
                 self.add_to_project_cbbx.isChecked())
         else:

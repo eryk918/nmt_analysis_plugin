@@ -32,7 +32,7 @@ class RasterCutter:
 
     def split_raster_by_mask(self, input_raster, mask):
         gdal.UseExceptions()
-        change_progressbar_value(self.progress, self.last_progress_value, 2)
+        change_progressbar_value(self.progress, self.last_progress_value, 2, silent=self.silent)
         raster_counter = 1
         base_raster = QgsRasterLayer(input_raster, "base")
         prj = base_raster.crs().postgisSrid()
@@ -47,7 +47,7 @@ class RasterCutter:
         self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         mask_layer, tmp_mask_name, mask = \
             self.check_vector_crs_and_translate(mask, prj, self.tmp_dir)
-        change_progressbar_value(self.progress, self.last_progress_value, 4)
+        change_progressbar_value(self.progress, self.last_progress_value, 4, silent=self.silent)
         rand_field = mask_layer.fields().names()[0]
         self.number_of_features = [feature for feature in
                                    mask_layer.getFeatures()]
@@ -73,7 +73,7 @@ class RasterCutter:
             ds = None
             self.list_of_splitted_rasters.append(tmp_raster_filepath)
             change_progressbar_value(self.progress, self.last_progress_value,
-                                     90 / len(self.number_of_features))
+                                     90 / len(self.number_of_features), silent=self.silent)
             raster_counter += 1
 
     def add_rasters_to_project(self, group_name):
@@ -110,13 +110,16 @@ class RasterCutter:
         if hasattr(self, "progress"):
             self.progress.close()
         self.clean_after_analysis()
-        QMessageBox.critical(
-            self.dlg,
-            'Analiza NMT',
-            'Dane są niepoprawne!\n'
-            'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
-            'Przycinanie rastra nie powiodło się!',
-            QMessageBox.Ok)
+        if self.silent:
+            return 'Przycinanie rastra nie powiodło się',
+        else:
+            QMessageBox.critical(
+                self.dlg,
+                'Analiza NMT',
+                'Dane są niepoprawne!\n'
+                'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
+                'Przycinanie rastra nie powiodło się!',
+                QMessageBox.Ok)
 
     def clean_after_analysis(self):
         self.list_of_splitted_rasters = []
@@ -124,9 +127,13 @@ class RasterCutter:
             shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
     def cutting_process(self, input_files, mask_file, export_directory,
-                        q_add_to_project):
+                        q_add_to_project, silent=False):
+        self.silent = silent
         self.progress = create_progress_bar(100,
                                             txt='Trwa przycinanie rastra...')
+        if not self.silent:
+            self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.progress.show()
         self.tmp_dir = mkdtemp(suffix=f'nmt_raster_cut')
         self.tmp_layers_flag = False
         if bool(export_directory) and \
@@ -136,21 +143,19 @@ class RasterCutter:
             self.tmp_layers_flag = True
         self.list_of_splitted_rasters = []
         self.last_progress_value = 0
-        self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.progress.show()
-        change_progressbar_value(self.progress, self.last_progress_value, 0)
+        change_progressbar_value(self.progress, self.last_progress_value, 0, silent=self.silent)
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:
-            self.invalid_data_error()
-            return
+            return self.invalid_data_error()
         if q_add_to_project:
             self.add_rasters_to_project("POCIĘTE RASTRY")
         self.clean_after_analysis()
         change_progressbar_value(self.progress, self.last_progress_value, 4,
-                                 True)
+                                 True, silent=self.silent)
         self.dlg.close()
-        QMessageBox.information(
-            self.dlg, 'Analiza NMT',
-            'Przycinanie rastra zakończone.',
-            QMessageBox.Ok)
+        if not self.silent:
+            QMessageBox.information(
+                self.dlg, 'Analiza NMT',
+                'Przycinanie rastra zakończone.',
+                QMessageBox.Ok)

@@ -29,12 +29,15 @@ class GenerateSlope:
         if hasattr(self, "progress"):
             self.progress.close()
         self.clean_after_analysis()
-        QMessageBox.critical(
-            self.dlg,
-            'Analiza NMT',
-            'Dane są niepoprawne!\n'
-            'Generowanie modelu nachylenia nie powiodło się!',
-            QMessageBox.Ok)
+        if self.silent:
+            return 'Generowanie modelu nachylenia nie powiodło się',
+        else:
+            QMessageBox.critical(
+                self.dlg,
+                'Analiza NMT',
+                'Dane są niepoprawne!\n'
+                'Generowanie modelu nachylenia nie powiodło się!',
+                QMessageBox.Ok)
 
     def clean_after_analysis(self):
         QApplication.processEvents()
@@ -61,9 +64,13 @@ class GenerateSlope:
         self.list_of_splitted_rasters.append(tmp_raster_filepath)
 
     def gen_slope_process(self, input_files, zfactor, export_directory,
-                          q_add_to_project):
+                          q_add_to_project, silent=False):
+        self.silent = silent
         self.progress = create_progress_bar(
             0, txt='Trwa generowanie modelu nachylenia...')
+        if not self.silent:
+            self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.progress.show()
         self.tmp_dir = mkdtemp(suffix=f'nmt_generate_slope')
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
@@ -72,18 +79,16 @@ class GenerateSlope:
             self.tmp_layers_flag = True
         self.list_of_splitted_rasters = []
         self.last_progress_value = 0
-        self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.progress.show()
         QApplication.processEvents()
         try:
             self.generate_slope(input_files, zfactor)
         except RuntimeError:
-            self.invalid_data_error()
-            return
+            return self.invalid_data_error()
         if q_add_to_project:
             add_rasters_to_project("NACHYLENIE", self.list_of_splitted_rasters)
         self.clean_after_analysis()
         self.dlg.close()
-        QMessageBox.information(
-            self.dlg, 'Analiza NMT',
-            'Generowanie modelu nachylenia zakończone.', QMessageBox.Ok)
+        if not self.silent:
+            QMessageBox.information(
+                self.dlg, 'Analiza NMT',
+                'Generowanie modelu nachylenia zakończone.', QMessageBox.Ok)

@@ -35,7 +35,7 @@ class GeneratePolygons_UI(QDialog, FORM_CLASS):
     def validate_fields(self):
         if self.wejscie.filePath() and self.maska.filePath():
             self.accept()
-            self.generatePolygons.analysis_process(
+            self.generatePolygons.generate_polys(
                 self.wejscie.lineEdit().text(),
                 self.maska.lineEdit().text(),
                 normalize_path(self.wyjscie.text()),

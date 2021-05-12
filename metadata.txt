@@ -3,7 +3,7 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Analiza NMT
+name=Zautomatyzowane analizy NMT
 qgisMinimumVersion=3.0
 description=Wtyczka QGIS umożliwiająca zautomatyzowane analizy numerycznych modeli terenu.
 version=0.1
@@ -27,7 +27,7 @@ tags=python
 
 homepage=http://homepage
 category=Plugins
-icon=icon.png
+icon=images/icon.png
 # experimental flag
 experimental=True
 

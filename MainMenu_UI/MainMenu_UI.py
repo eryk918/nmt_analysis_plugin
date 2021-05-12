@@ -29,6 +29,7 @@ from qgis.PyQt import QtWidgets, QtGui
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QMessageBox
 
+from ..TaskAutomation.TaskAutomation import TaskAutomation
 from ..GeneratePolygons.GeneratePolygons import GeneratePolygons
 from ..Generate3DModel.Generate3DModel import Generate3DModel
 from ..GenerateAspect.GenerateAspect import GenerateAspect
@@ -57,7 +58,7 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         self.qgis2threejs_exists = True
         self.q23js = None
 
-        # Analiza punktow wysokoscowych
+        # Generowanie punktów wysokościowych
         self.generatePoints = GeneratePoints(self)
         self.btn_gen_points.clicked.connect(self.generatePoints.run)
 
@@ -81,6 +82,18 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         self.generateAspect = GenerateAspect(self)
         self.btn_gen_aspect.clicked.connect(self.generateAspect.run)
 
+        # Potnij raster
+        self.rasterCutter = RasterCutter(self)
+        self.btn_split_raster.clicked.connect(self.rasterCutter.run)
+
+        # Nadaj/przypisz odwzorowanie
+        self.setProjection = SetProjection(self)
+        self.btn_set_projection.clicked.connect(self.setProjection.run)
+
+        # Automatyzacja zadań
+        self.taskAutomation = TaskAutomation(self)
+        self.btn_automatic.clicked.connect(self.taskAutomation.run)
+
         # Wygeneruj model 3D
         self.qgis2threejs_path = normalize_path(
             os.path.join(self.plugin_path, '..//Qgis2threejs'))
@@ -90,14 +103,6 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
             self.q23js = Qgis2threejs
         self.generate3DModel = Generate3DModel(self)
         self.btn_gen_model3d.clicked.connect(self.generate3DModel.run)
-
-        # Potnij raster
-        self.rasterCutter = RasterCutter(self)
-        self.btn_split_raster.clicked.connect(self.rasterCutter.run)
-
-        # Nadaj/przypisz odwzorowanie
-        self.setProjection = SetProjection(self)
-        self.btn_set_projection.clicked.connect(self.setProjection.run)
 
         # O wtyczce
         self.btn_about.clicked.connect(self.show_info_about_plugin)

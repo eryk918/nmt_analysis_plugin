@@ -7,13 +7,13 @@ from PyQt5.QtCore import Qt
 from osgeo import gdal
 from qgis import processing
 from qgis.PyQt.QtWidgets import QApplication, QMessageBox
+from qgis.PyQt.QtCore import QVariant
 from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem, \
-    QgsRasterLayer, QgsVectorFileWriter
+    QgsRasterLayer, QgsVectorFileWriter, QgsField
 from qgis.gui import QgsProjectionSelectionDialog
 from qgis.utils import iface
 
 from ..GeneratePoints.UI.GeneratePoints_UI import GeneratePoints_UI
-from ..GeneratePoints.utils.update_fields import update_fields_list
 from ..utils import CreateTemporaryLayer, project, create_progress_bar, \
     add_map_layer, normalize_path, i_iface, change_progressbar_value
 
@@ -36,7 +36,6 @@ class GeneratePoints:
         najnizsze = []
         najwyzsze = []
         layer_max = self.clone_layer(layer)
-        # TODO: naprawić klonowanie warstw
         for index in range(1, how_many_max + 1):
             QApplication.processEvents()
             layer_max.removeSelection()
@@ -96,40 +95,26 @@ class GeneratePoints:
         tmp = CreateTemporaryLayer(f"point?crs=EPSG:{self.actual_crs}",
                                    layer_name,
                                    "memory")
-        tmp.set_fields(update_fields_list)
+        tmp.set_fields([QgsField("wysokosc", QVariant.Double, 'double', 20, 1)])
         return tmp
 
     def add_and_set_final_features(self, dest_layer, min_values, max_values):
         final_list = min_values + max_values
-        self.update_values_dict = {}
-        for column_id in range(32):
-            if column_id == 11:
-                self.update_values_dict[column_id] = 10000
-            elif column_id == 12:
-                self.update_values_dict[column_id] = "0010_819"
-            elif column_id == 14:
-                self.update_values_dict[column_id] = 1234.1234
-            elif column_id == 15:
-                self.update_values_dict[column_id] = "NMT"
-            elif column_id == 16 or column_id == 21:
-                self.update_values_dict[column_id] = False
-            else:
-                self.update_values_dict[column_id] = None
         dest_layer.startEditing()
         data_provider = dest_layer.dataProvider()
         for feat in final_list:
-            self.update_values_dict[14] = feat.attributes()[0]
-            feat.setAttributes(list(self.update_values_dict.values()))
+            feat.setAttributes([feat.attributes()[0]])
             data_provider.addFeature(feat)
         dest_layer.commitChanges()
 
     def split_raster_by_mask(self, input_raster, mask):
         gdal.UseExceptions()
-        change_progressbar_value(self.progress, self.last_progress_value, 2)
+        change_progressbar_value(self.progress, self.last_progress_value, 2, silent=self.silent)
         raster_counter = 1
         base_raster = QgsRasterLayer(input_raster, "base")
         prj = base_raster.crs().postgisSrid()
-        self.progress.setWindowFlags(Qt.WindowStaysOnBottomHint)
+        if not self.silent:
+            self.progress.setWindowFlags(Qt.WindowStaysOnBottomHint)
         if prj == 0 or prj == '':
             crs = QgsCoordinateReferenceSystem()
             selection_dialog = QgsProjectionSelectionDialog(iface.mainWindow())
@@ -137,10 +122,11 @@ class GeneratePoints:
             if selection_dialog.exec():
                 prj = selection_dialog.crs().postgisSrid()
                 self.actual_crs = prj
-        self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
+        if not self.silent:
+            self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         mask_layer, tmp_mask_name, mask = \
             self.check_vector_crs_and_translate(mask, prj, self.tmp_dir)
-        change_progressbar_value(self.progress, self.last_progress_value, 4)
+        change_progressbar_value(self.progress, self.last_progress_value, 4, silent=self.silent)
         rand_field = mask_layer.fields().names()[0]
         self.number_of_features = [feature for feature in
                                    mask_layer.getFeatures()]
@@ -160,18 +146,8 @@ class GeneratePoints:
             ds = None
             self.list_of_splitted_rasters.append(tmp_raster_filepath)
             change_progressbar_value(self.progress, self.last_progress_value,
-                                     22 / len(self.number_of_features))
+                                     22 / len(self.number_of_features), silent=self.silent)
             raster_counter += 1
-
-    def change_progressbar_value(self, value, last_step=False):
-        self.progress.show()
-        QApplication.processEvents()
-        self.last_progress_value += value
-        if self.last_progress_value == 100 or last_step:
-            self.progress.setValue(100)
-            self.progress.close()
-        else:
-            self.progress.setValue(self.last_progress_value)
 
     def raster_to_vector_point(self, src_raster):
         vectorized = processing.run(
@@ -217,57 +193,60 @@ class GeneratePoints:
         if hasattr(self, "progress"):
             self.progress.close()
         self.clean_after_analysis()
-        QMessageBox.critical(
-            self.dlg, 'Analiza NMT',
-            'Dane są niepoprawne!\n'
-            'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
-            'Generowanie punktów wysokościowych nie powiodło się!',
-            QMessageBox.Ok)
+        if self.silent:
+            return 'Generowanie punktów wysokościowych nie powiodło się',
+        else:
+            QMessageBox.critical(
+                self.dlg, 'Analiza NMT',
+                'Dane są niepoprawne!\n'
+                'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
+                'Generowanie punktów wysokościowych nie powiodło się!',
+                QMessageBox.Ok)
 
     def clean_after_analysis(self):
         self.list_of_splitted_rasters = []
         self.list_of_vectorized_layers = []
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
-    def analysis_process(
+    def generate_points(
             self, input_files, mask_file, export_directory, an_min, an_max,
-            q_add_to_project, radius):
+            q_add_to_project, radius, silent=False):
+        self.silent = silent
         self.progress = \
             create_progress_bar(
                 100, txt='Trwa generowanie punktów wysokościowych...')
+        if not self.silent:
+            self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.progress.show()
         self.tmp_dir = mkdtemp(suffix=f'nmt_gen_point')
         self.list_of_splitted_rasters = []
         self.list_of_vectorized_layers = []
         self.last_progress_value = 0
-        self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.progress.show()
-        change_progressbar_value(self.progress, self.last_progress_value, 0)
+        change_progressbar_value(self.progress, self.last_progress_value, 0, silent=self.silent)
         filename = input_files.split('\\')[-1].strip(
             input_files.split("\\")[-1].split('.')[-1])[:-1]
         qml_path = normalize_path(
-            os.path.join(
-                self.main.plugin_dir,
-                '..\\GeneratePoints\\utils\\punkty_wys.qml'))
+            os.path.join(self.main.plugin_dir,
+            '..\\GeneratePoints\\utils\\punkty_wys.qml'))
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:
-            self.invalid_data_error()
-            return
+            return self.invalid_data_error()
         for raster in self.list_of_splitted_rasters:
             self.raster_to_vector_point(raster)
-            change_progressbar_value(self.progress, self.last_progress_value,
-                                     16 / len(self.list_of_splitted_rasters))
+            change_progressbar_value(
+                self.progress, self.last_progress_value,
+                16 / len(self.list_of_splitted_rasters), silent=self.silent)
         tmp_lyr = self.create_tmp_layer(f'{filename}_pkt_wys')
         for vector in self.list_of_vectorized_layers:
             try:
                 najwyzsze, najnizsze = self.get_min_max_from_layer(
                     vector, an_max, an_min, radius)
             except IndexError:
-                self.invalid_data_error()
-                return
+                return self.invalid_data_error()
             self.add_and_set_final_features(tmp_lyr, najnizsze, najwyzsze)
             change_progressbar_value(self.progress, self.last_progress_value,
-                                     46 / len(self.list_of_vectorized_layers))
+                                     46 / len(self.list_of_vectorized_layers), silent=self.silent)
         tmp_lyr.loadNamedStyle(qml_path)
         tmp_lyr.triggerRepaint()
         if export_directory not in (".", ""):
@@ -279,7 +258,7 @@ class GeneratePoints:
             _writer = None
             shutil.copy(qml_path, export_directory.replace(".shp", ".qml"))
             change_progressbar_value(self.progress, self.last_progress_value,
-                                     5)
+                                     5, silent=self.silent)
             if q_add_to_project:
                 self.add_vector_to_project(
                     QgsVectorLayer(export_directory,
@@ -289,9 +268,10 @@ class GeneratePoints:
             self.add_vector_to_project(tmp_lyr, "PUNKTY_WYSOKOSCIOWE")
         self.clean_after_analysis()
         change_progressbar_value(self.progress, self.last_progress_value, 5,
-                                 True)
+                                 True, silent=self.silent)
         self.dlg.close()
-        QMessageBox.information(
-            self.dlg, 'Analiza NMT',
-            'Generowanie punktów wysokościowych zakończone.',
-            QMessageBox.Ok)
+        if not self.silent:
+            QMessageBox.information(
+                self.dlg, 'Analiza NMT',
+                'Generowanie punktów wysokościowych zakończone.',
+                QMessageBox.Ok)

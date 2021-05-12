@@ -177,6 +177,97 @@ color: #fff;
             <enum>QFrame::NoFrame</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="0">
+             <widget class="QGroupBox" name="groupBox_3">
+              <property name="styleSheet">
+               <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+              </property>
+              <property name="title">
+               <string>Mechanizmy:</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_3">
+               <item row="1" column="0">
+                <widget class="QPushButton" name="btn_gen_polygons">
+                 <property name="styleSheet">
+                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+                 </property>
+                 <property name="text">
+                  <string>Wygeneruj poligony</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QPushButton" name="btn_gen_stat">
+                 <property name="styleSheet">
+                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+                 </property>
+                 <property name="text">
+                  <string>Wygeneruj statystykę</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QPushButton" name="btn_gen_hillshade">
+                 <property name="styleSheet">
+                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+                 </property>
+                 <property name="text">
+                  <string>Wygeneruj model cieniowania</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QPushButton" name="btn_gen_slope">
+                 <property name="styleSheet">
+                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+                 </property>
+                 <property name="text">
+                  <string>Wygeneruj model nachylenia</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QPushButton" name="btn_gen_aspect">
+                 <property name="styleSheet">
+                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+                 </property>
+                 <property name="text">
+                  <string>Wygeneruj model ekspozycji</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QPushButton" name="btn_gen_points">
+                 <property name="font">
+                  <font>
+                   <family>Samsung Sans</family>
+                   <pointsize>-1</pointsize>
+                   <weight>50</weight>
+                   <italic>false</italic>
+                   <bold>false</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
+</string>
+                 </property>
+                 <property name="text">
+                  <string>Wygeneruj punkty wysokościowe</string>
+                 </property>
+                 <property name="default">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
             <item row="3" column="0">
              <widget class="QFrame" name="frame_3">
               <property name="frameShape">
@@ -220,19 +311,8 @@ color: #fff;
               <property name="title">
                <string>Dodatkowe:</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <item>
-                <widget class="QPushButton" name="btn_split_raster">
-                 <property name="styleSheet">
-                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>Potnij raster</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
+              <layout class="QGridLayout" name="gridLayout_4">
+               <item row="0" column="0">
                 <widget class="QPushButton" name="btn_set_projection">
                  <property name="styleSheet">
                   <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
@@ -243,7 +323,7 @@ color: #fff;
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="0" column="1">
                 <widget class="QPushButton" name="btn_automatic">
                  <property name="styleSheet">
                   <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
@@ -254,76 +334,18 @@ color: #fff;
                  </property>
                 </widget>
                </item>
-              </layout>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QGroupBox" name="groupBox_3">
-              <property name="styleSheet">
-               <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-              </property>
-              <property name="title">
-               <string>Opcje:</string>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_3">
-               <item row="0" column="0">
-                <widget class="QPushButton" name="btn_gen_points">
-                 <property name="font">
-                  <font>
-                   <family>Samsung Sans</family>
-                   <pointsize>-1</pointsize>
-                   <weight>50</weight>
-                   <italic>false</italic>
-                   <bold>false</bold>
-                  </font>
-                 </property>
+               <item row="1" column="0">
+                <widget class="QPushButton" name="btn_split_raster">
                  <property name="styleSheet">
                   <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
 </string>
                  </property>
                  <property name="text">
-                  <string>Wygeneruj punkty wysokościowe</string>
-                 </property>
-                 <property name="default">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QPushButton" name="btn_gen_slope">
-                 <property name="styleSheet">
-                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>Wygeneruj model nachylenia</string>
+                  <string>Potnij raster</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QPushButton" name="btn_gen_hillshade">
-                 <property name="styleSheet">
-                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>Wygeneruj model cieniowania</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QPushButton" name="btn_gen_aspect">
-                 <property name="styleSheet">
-                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>Wygeneruj model ekspozycji</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
                 <widget class="QPushButton" name="btn_gen_model3d">
                  <property name="styleSheet">
                   <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
@@ -331,39 +353,6 @@ color: #fff;
                  </property>
                  <property name="text">
                   <string>Stwórz model 3D</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QPushButton" name="btn_gen_polygons">
-                 <property name="styleSheet">
-                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>Wygeneruj poligony</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QPushButton" name="btn_gen_lines">
-                 <property name="styleSheet">
-                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>Poprowadź linie</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QPushButton" name="btn_gen_stat">
-                 <property name="styleSheet">
-                  <string notr="true">*{font-family: &quot;Samsung Sans&quot;;font-size: 14px;}
-</string>
-                 </property>
-                 <property name="text">
-                  <string>Wygeneruj statystykę</string>
                  </property>
                 </widget>
                </item>
@@ -399,13 +388,8 @@ color: #fff;
   <tabstop>btn_gen_slope</tabstop>
   <tabstop>btn_gen_polygons</tabstop>
   <tabstop>btn_gen_hillshade</tabstop>
-  <tabstop>btn_gen_lines</tabstop>
   <tabstop>btn_gen_aspect</tabstop>
-  <tabstop>btn_gen_stat</tabstop>
-  <tabstop>btn_gen_model3d</tabstop>
-  <tabstop>btn_split_raster</tabstop>
   <tabstop>btn_set_projection</tabstop>
-  <tabstop>btn_automatic</tabstop>
   <tabstop>btn_about</tabstop>
   <tabstop>btn_exit</tabstop>
  </tabstops>

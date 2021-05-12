@@ -29,7 +29,7 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
     def validate_fields(self):
         if self.wejscie.filePath() and self.maska.filePath():
             self.accept()
-            self.generatePoints.analysis_process(
+            self.generatePoints.generate_points(
                 self.wejscie.lineEdit().text(),
                 self.maska.lineEdit().text(),
                 normalize_path(self.wyjscie.text()),

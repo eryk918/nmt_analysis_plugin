@@ -71,7 +71,7 @@
    <property name="spacing">
     <number>0</number>
    </property>
-   <item row="0" column="0" colspan="6">
+   <item row="0" column="0" colspan="5">
     <widget class="QFrame" name="frame_3">
      <property name="minimumSize">
       <size>
@@ -141,7 +141,7 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" colspan="6">
+   <item row="1" column="0" colspan="5">
     <widget class="QFrame" name="frame_2">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -199,7 +199,7 @@
          <item row="4" column="0">
           <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>Mnożnik Z</string>
+            <string>Mnożnik Z:</string>
            </property>
           </widget>
          </item>
@@ -222,7 +222,7 @@
          <item row="1" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Lokalizacja pliku NMT</string>
+            <string>Lokalizacja pliku NMT:</string>
            </property>
           </widget>
          </item>
@@ -268,7 +268,7 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="5">
+   <item row="2" column="4">
     <widget class="QPushButton" name="pushButton_anuluj">
      <property name="minimumSize">
       <size>
@@ -289,19 +289,6 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>436</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="4">
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>44</width>
        <height>20</height>
       </size>
      </property>

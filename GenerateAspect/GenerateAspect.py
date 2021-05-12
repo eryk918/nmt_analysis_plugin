@@ -27,12 +27,15 @@ class GenerateAspect:
 
     def invalid_data_error(self):
         self.clean_after_analysis()
-        QMessageBox.critical(
-            self.dlg,
-            'Analiza NMT',
-            'Dane są niepoprawne!\n'
-            'Generowanie modelu ekspozycji nie powiodło się!',
-            QMessageBox.Ok)
+        if self.silent:
+            return 'Generowanie modelu ekspozycji nie powiodło się',
+        else:
+            QMessageBox.critical(
+                self.dlg,
+                'Analiza NMT',
+                'Dane są niepoprawne!\n'
+                'Generowanie modelu ekspozycji nie powiodło się!',
+                QMessageBox.Ok)
 
     def clean_after_analysis(self):
         QApplication.processEvents()
@@ -57,9 +60,13 @@ class GenerateAspect:
         self.list_of_splitted_rasters.append(tmp_raster_filepath)
 
     def gen_aspect_process(self, input_files, zfactor, export_directory,
-                           q_add_to_project):
+                           q_add_to_project, silent=False):
+        self.silent = silent
         self.progress = create_progress_bar(
             0, txt='Trwa generowanie modelu ekspozycji...')
+        if not self.silent:
+            self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.progress.show()
         QApplication.processEvents()
         qml_path = normalize_path(
             os.path.join(self.main.plugin_dir,
@@ -72,19 +79,17 @@ class GenerateAspect:
             self.tmp_layers_flag = True
         self.list_of_splitted_rasters = []
         self.last_progress_value = 0
-        self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.progress.show()
         QApplication.processEvents()
         try:
             self.generate_aspect(input_files, zfactor)
         except RuntimeError:
-            self.invalid_data_error()
-            return
+            return self.invalid_data_error()
         if q_add_to_project:
             add_rasters_to_project("EKSPOZYCJA",
                                    self.list_of_splitted_rasters,  qml_path)
         self.clean_after_analysis()
         self.dlg.close()
-        QMessageBox.information(
-            self.dlg, 'Analiza NMT',
-            'Generowanie modelu ekspozycji zakończone.', QMessageBox.Ok)
+        if not self.silent:
+            QMessageBox.information(
+                self.dlg, 'Analiza NMT',
+                'Generowanie modelu ekspozycji zakończone.', QMessageBox.Ok)

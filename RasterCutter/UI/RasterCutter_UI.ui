@@ -68,7 +68,7 @@
    <property name="spacing">
     <number>0</number>
    </property>
-   <item row="0" column="0" colspan="6">
+   <item row="0" column="0" colspan="5">
     <widget class="QFrame" name="frame_3">
      <property name="minimumSize">
       <size>
@@ -138,7 +138,7 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" colspan="6">
+   <item row="1" column="0" colspan="5">
     <widget class="QFrame" name="frame_2">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -196,7 +196,7 @@
          <item row="1" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Lokalizacja pliku NMT</string>
+            <string>Lokalizacja pliku NMT:</string>
            </property>
           </widget>
          </item>
@@ -213,7 +213,7 @@
          <item row="4" column="0">
           <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>Maska pól podstawowych</string>
+            <string>Maska pól podstawowych:</string>
            </property>
           </widget>
          </item>
@@ -246,32 +246,6 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="3">
-    <widget class="QPushButton" name="pushButton_zapisz">
-     <property name="minimumSize">
-      <size>
-       <width>80</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Uruchom</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="5">
-    <widget class="QPushButton" name="pushButton_anuluj">
-     <property name="minimumSize">
-      <size>
-       <width>70</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Zamknij</string>
-     </property>
-    </widget>
-   </item>
    <item row="2" column="1">
     <spacer name="horizontalSpacer">
      <property name="orientation">
@@ -285,18 +259,31 @@
      </property>
     </spacer>
    </item>
-   <item row="2" column="4">
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+   <item row="2" column="3">
+    <widget class="QPushButton" name="pushButton_zapisz">
+     <property name="minimumSize">
       <size>
-       <width>44</width>
-       <height>20</height>
+       <width>80</width>
+       <height>0</height>
       </size>
      </property>
-    </spacer>
+     <property name="text">
+      <string>Uruchom</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="4">
+    <widget class="QPushButton" name="pushButton_anuluj">
+     <property name="minimumSize">
+      <size>
+       <width>70</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Zamknij</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

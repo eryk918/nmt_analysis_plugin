@@ -4,13 +4,12 @@ import shutil
 from datetime import datetime
 from tempfile import mkdtemp
 
-from PyQt5.QtCore import Qt
 from qgis import processing
 from qgis.PyQt.QtWidgets import QMessageBox, QApplication
 
 from ..GenerateStatistics.UI.GenerateStatistics_UI import GenerateStatistics_UI
 from ..utils import project, create_progress_bar, i_iface, normalize_path, \
-    open_other_files
+    open_other_files, Qt
 
 
 class GenerateStatistics:
@@ -28,12 +27,15 @@ class GenerateStatistics:
 
     def invalid_data_error(self):
         self.clean_after_analysis()
-        QMessageBox.critical(
-            self.dlg,
-            'Analiza NMT',
-            'Dane są niepoprawne!\n'
-            'Generowanie statystyki nie powiodło się!',
-            QMessageBox.Ok)
+        if self.silent:
+            return 'Generowanie statystyki nie powiodło się',
+        else:
+            QMessageBox.critical(
+                self.dlg,
+                'Analiza NMT',
+                'Dane są niepoprawne!\n'
+                'Generowanie statystyki nie powiodło się!',
+                QMessageBox.Ok)
 
     def clean_after_analysis(self):
         QApplication.processEvents()
@@ -61,9 +63,13 @@ class GenerateStatistics:
         self.list_of_files.append(tmp_layer_filepath)
 
     def generate_statistics_process(self, input_files, export_directory,
-                                    q_add_to_project):
+                                    q_add_to_project, silent=False):
+        self.silent = silent
         self.progress = create_progress_bar(
             0, txt='Trwa generowanie statystyki...')
+        if not self.silent:
+            self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.progress.show()
         QApplication.processEvents()
         self.tmp_dir = mkdtemp(suffix=f'nmt_generate_statistics')
         self.tmp_layers_flag = False
@@ -73,15 +79,11 @@ class GenerateStatistics:
             self.tmp_layers_flag = True
         self.list_of_files = []
         self.last_progress_value = 0
-        self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.progress.show()
         QApplication.processEvents()
-        for input_layers in input_files:
-            try:
-                self.generate_statistics(input_layers)
-            except RuntimeError:
-                self.invalid_data_error()
-                return
+        try:
+            self.generate_statistics(input_files)
+        except RuntimeError:
+            return self.invalid_data_error()
         if q_add_to_project:
             for file in self.list_of_files:
                 open_other_files(file)
@@ -90,6 +92,7 @@ class GenerateStatistics:
         if hasattr(self, "progress"):
             self.progress.close()
         self.list_of_files = []
-        QMessageBox.information(
-            self.dlg, 'Analiza NMT',
-            'Generowanie statystyki zakończone.', QMessageBox.Ok)
+        if not self.silent:
+            QMessageBox.information(
+                self.dlg, 'Analiza NMT',
+                'Generowanie statystyki zakończone.', QMessageBox.Ok)

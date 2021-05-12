@@ -30,13 +30,14 @@ class GenerateStatistics_UI(QDialog, FORM_CLASS):
         if self.wejscie.filePath():
             self.accept()
             self.generateStatistics.generate_statistics_process(
-                self.wejscie.splitFilePaths(self.wejscie.lineEdit().text()),
+                self.wejscie.splitFilePaths(self.wejscie.lineEdit().text())[0],
                 normalize_path(self.wyjscie.text()),
                 self.add_to_project_cbbx.isChecked())
         else:
             QMessageBox.warning(
-                self, 'Ostrzeżenie', 'Sprawdź poprawność danych wejściowych!\n'
-                , QMessageBox.Ok)
+                self,
+                'Ostrzeżenie', 'Sprawdź poprawność danych wejściowych!\n',
+                QMessageBox.Ok)
 
     def enable_checkbox(self, text):
         if text:

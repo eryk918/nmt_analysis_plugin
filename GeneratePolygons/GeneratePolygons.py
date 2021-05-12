@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import shutil
 from datetime import datetime
 
 from PyQt5.QtCore import Qt
@@ -26,16 +27,6 @@ class GeneratePolygons:
         self.dlg = GeneratePolygons_UI(self)
         self.dlg.setup_dialog()
         self.dlg.run_dialog()
-
-    def change_progressbar_value(self, value, last_step=False):
-        self.progress.show()
-        QApplication.processEvents()
-        self.last_progress_value += value
-        if self.last_progress_value == 100 or last_step:
-            self.progress.setValue(100)
-            self.progress.close()
-        else:
-            self.progress.setValue(self.last_progress_value)
 
     def raster_to_vector_point(self, src_raster):
         try:
@@ -167,12 +158,15 @@ class GeneratePolygons:
 
     def invalid_data_error(self):
         self.clean_after_analysis()
-        QMessageBox.critical(
-            self.dlg, 'Analiza NMT',
-            'Dane są niepoprawne!\n'
-            'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
-            'Generowanie poligonów nie powiodło się!',
-            QMessageBox.Ok)
+        if self.silent:
+            return 'Generowanie poligonów nie powiodło się',
+        else:
+            QMessageBox.critical(
+                self.dlg, 'Analiza NMT',
+                'Dane są niepoprawne!\n'
+                'Sprawdź zgodność danych wejściowych i ich odwzorowań.\n'
+                'Generowanie poligonów nie powiodło się!',
+                QMessageBox.Ok)
 
     def clean_after_analysis(self):
         for layer in self.list_of_layers:
@@ -184,18 +178,23 @@ class GeneratePolygons:
         if hasattr(self, "progress"):
             self.progress.close()
 
-    def analysis_process(self, input_files, mask_file, export_directory,
+    def generate_polys(self, input_files, mask_file, export_directory,
                          height, q_add_to_project, offset, amount, feat_height,
-                         feat_width, feat_angle, feat_type):
+                         feat_width, feat_angle, feat_type, silent=False):
+        self.silent = silent
         self.progress = \
             create_progress_bar(0, txt='Trwa generowanie poligonów...')
+        if not silent:
+            self.last_progress_value = 0
+            self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.progress.show()
+            change_progressbar_value(self.progress, self.last_progress_value, 0, self.silent)
         self.list_of_layers = []
-        self.last_progress_value = 0
-        self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.progress.show()
-        change_progressbar_value(self.progress, self.last_progress_value, 0)
         filename = input_files.split('\\')[-1].strip(
             input_files.split("\\")[-1].split('.')[-1])[:-1]
+        qml_path = normalize_path(
+            os.path.join(self.main.plugin_dir,
+            '..\\GeneratePolygons\\utils\\polygons.qml'))
         input_files = normalize_path(input_files)
         mask_file = normalize_path(mask_file)
         dem_extent = self.extract_layer_extent(input_files)
@@ -227,32 +226,35 @@ class GeneratePolygons:
         self.feats_to_predict = self.extracted_values.getFeatures()
         self.list_of_layers.append(self.feats_to_predict)
         counter = 0
-        while True:
-            for feat in self.feats_to_predict:
+        try:
+            while True:
+                for feat in self.feats_to_predict:
+                    if counter == amount:
+                        break
+                    feature = feat
+                    self.extracted_values.select(feature.id())
+                    QApplication.processEvents()
+                    points_to_calc = self.extract_by_location(
+                        points_to_analysis_single, self.extracted_values, [0],
+                        True)
+                    QApplication.processEvents()
+                    if self.get_height_difference(points_to_calc, height):
+                        tmp_lyr.dataProvider().addFeature(feature)
+                        self.extracted_values.removeSelection()
+                        counter += 1
+                    else:
+                        self.extracted_values.removeSelection()
+                        continue
+                    buffer = self.create_buffer(tmp_lyr, offset)
+                    self.extracted_values = self.extract_by_location(
+                        self.extracted_values, buffer, [2])
+                    self.feats_to_predict = self.extracted_values.getFeatures()
+                    QApplication.processEvents()
+                    break
                 if counter == amount:
                     break
-                feature = feat
-                self.extracted_values.select(feature.id())
-                QApplication.processEvents()
-                points_to_calc = self.extract_by_location(
-                    points_to_analysis_single, self.extracted_values, [0],
-                    True)
-                QApplication.processEvents()
-                if self.get_height_difference(points_to_calc, height):
-                    tmp_lyr.dataProvider().addFeature(feature)
-                    self.extracted_values.removeSelection()
-                    counter += 1
-                else:
-                    self.extracted_values.removeSelection()
-                    continue
-                buffer = self.create_buffer(tmp_lyr, offset)
-                self.extracted_values = self.extract_by_location(
-                    self.extracted_values, buffer, [2])
-                self.feats_to_predict = self.extracted_values.getFeatures()
-                QApplication.processEvents()
-                break
-            if counter == amount:
-                break
+        except RuntimeError:
+            return self.invalid_data_error()
         if counter < amount:
             resp = QMessageBox.information(
                 self.dlg, 'Analiza NMT',
@@ -262,10 +264,13 @@ class GeneratePolygons:
             if resp == QMessageBox.No:
                 self.clean_after_analysis()
                 return
+        tmp_lyr.loadNamedStyle(qml_path)
+        tmp_lyr.triggerRepaint()
         if export_directory not in (".", ""):
             _writer = QgsVectorFileWriter.writeAsVectorFormat(
                 tmp_lyr, export_directory, "utf-8", tmp_lyr.crs(),
                 "ESRI Shapefile")
+            shutil.copy(qml_path, export_directory.replace(".shp", ".qml"))
             QApplication.processEvents()
             _writer = None
             if q_add_to_project:
@@ -278,6 +283,7 @@ class GeneratePolygons:
             QApplication.processEvents()
         self.clean_after_analysis()
         self.dlg.close()
-        QMessageBox.information(
-            self.dlg, 'Analiza NMT', 'Generowanie poligonów zakończone.',
-            QMessageBox.Ok)
+        if not silent:
+            QMessageBox.information(
+                self.dlg, 'Analiza NMT', 'Generowanie poligonów zakończone.',
+                QMessageBox.Ok)

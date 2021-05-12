@@ -27,12 +27,15 @@ class SetProjection:
 
     def invalid_data_error(self):
         self.clean_after_analysis()
-        QMessageBox.critical(
-            self.dlg,
-            'Analiza NMT',
-            'Dane są niepoprawne!\n'
-            'Nadawanie odwzorowania nie powiodło się!',
-            QMessageBox.Ok)
+        if self.silent:
+            return 'Nadawanie odwzorowania nie powiodło się',
+        else:
+            QMessageBox.critical(
+                self.dlg,
+                'Analiza NMT',
+                'Dane są niepoprawne!\n'
+                'Nadawanie odwzorowania nie powiodło się!',
+                QMessageBox.Ok)
 
     def clean_after_analysis(self):
         QApplication.processEvents()
@@ -54,18 +57,22 @@ class SetProjection:
             processing.run(
                 'qgis:reprojectlayer',
                 {'INPUT': input_layer, 'OUTPUT': tmp_layer_filepath,
-                 'TARGET_CRS': f'EPSG:{dest_crs.postgisSrid()}'})
+                 'TARGET_CRS': f'EPSG:{dest_crs}'})
         else:
             processing.run(
                 'gdal:translate',
                 {'INPUT': input_layer, 'OUTPUT': tmp_layer_filepath,
-                 'TARGET_CRS': f'EPSG:{dest_crs.postgisSrid()}'})
+                 'TARGET_CRS': f'EPSG:{dest_crs}'})
         self.list_of_layers.append(tmp_layer_filepath)
 
     def set_proj_process(self, input_files, dest_crs,
-                         export_directory, q_add_to_project):
+                         export_directory, q_add_to_project, silent=False):
+        self.silent = silent
         self.progress = create_progress_bar(
             0, txt='Trwa nadawanie odwzorowania...')
+        if not self.silent:
+            self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.progress.show()
         QApplication.processEvents()
         self.tmp_dir = mkdtemp(suffix=f'nmt_set_projection')
         self.tmp_layers_flag = False
@@ -76,15 +83,11 @@ class SetProjection:
         self.list_of_layers = []
         self.last_progress_value = 0
         self.layer_type = None
-        self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.progress.show()
         QApplication.processEvents()
-        for input_layers in input_files:
-            try:
-                self.set_projection(input_layers, dest_crs)
-            except RuntimeError:
-                self.invalid_data_error()
-                return
+        try:
+            self.set_projection(input_files, dest_crs)
+        except RuntimeError:
+            return self.invalid_data_error()
         if q_add_to_project:
             for lyr in self.list_of_layers:
                 if os.path.splitext(lyr)[-1] in ('.shp', '.gpkg'):
@@ -93,6 +96,7 @@ class SetProjection:
                     add_rasters_to_project("PRZETŁUMACZONE_WARSTWY", [lyr])
         self.clean_after_analysis()
         self.dlg.close()
-        QMessageBox.information(
-            self.dlg, 'Analiza NMT',
-            'Nadawanie odwzorowania zakończone.', QMessageBox.Ok)
+        if not self.silent:
+            QMessageBox.information(
+                self.dlg, 'Analiza NMT',
+                'Nadawanie odwzorowania zakończone.', QMessageBox.Ok)
