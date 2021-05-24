@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
-from datetime import datetime
 
-from PyQt5.QtCore import Qt
 from qgis import processing
 from qgis.PyQt.QtWidgets import QApplication, QMessageBox
 from qgis.core import QgsProcessingFeatureSourceDefinition
@@ -12,7 +10,7 @@ from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsFeatureRequest
 from ..GeneratePolygons.UI.GeneratePolygons_UI import GeneratePolygons_UI
 from ..utils import project, create_progress_bar, \
     add_map_layer, i_iface, change_progressbar_value, normalize_path, \
-    CreateTemporaryLayer
+    CreateTemporaryLayer, Qt
 
 
 class GeneratePolygons:
@@ -179,22 +177,24 @@ class GeneratePolygons:
             self.progress.close()
 
     def generate_polys(self, input_files, mask_file, export_directory,
-                         height, q_add_to_project, offset, amount, feat_height,
-                         feat_width, feat_angle, feat_type, silent=False):
+                       height, q_add_to_project, offset, amount, feat_height,
+                       feat_width, feat_angle, feat_type, silent=False):
         self.silent = silent
         self.progress = \
-            create_progress_bar(0, txt='Trwa generowanie poligonów...')
+            create_progress_bar(0, txt='Trwa generowanie poligonów...',
+                                silent=silent)
         if not silent:
             self.last_progress_value = 0
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.progress.show()
-            change_progressbar_value(self.progress, self.last_progress_value, 0, self.silent)
+            change_progressbar_value(self.progress, self.last_progress_value,
+                                     0, self.silent)
         self.list_of_layers = []
         filename = input_files.split('\\')[-1].strip(
             input_files.split("\\")[-1].split('.')[-1])[:-1]
         qml_path = normalize_path(
             os.path.join(self.main.plugin_dir,
-            '..\\GeneratePolygons\\utils\\polygons.qml'))
+                         '..\\GeneratePolygons\\utils\\polygons.qml'))
         input_files = normalize_path(input_files)
         mask_file = normalize_path(mask_file)
         dem_extent = self.extract_layer_extent(input_files)
@@ -287,3 +287,6 @@ class GeneratePolygons:
             QMessageBox.information(
                 self.dlg, 'Analiza NMT', 'Generowanie poligonów zakończone.',
                 QMessageBox.Ok)
+        else:
+            return export_directory if export_directory not in (".", "") \
+                else tmp_lyr.source()

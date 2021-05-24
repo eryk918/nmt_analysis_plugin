@@ -13,11 +13,12 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class GeneratePoints_UI(QDialog, FORM_CLASS):
-    def __init__(self, generatePoints, parent=None):
+    def __init__(self, generatePoints, parent=None, allow_silent=False):
         super(GeneratePoints_UI, self).__init__(parent)
         self.setupUi(self)
         self.generatePoints = generatePoints
         repair_comboboxes(self)
+        self.silent = allow_silent
         self.setWindowIcon(self.generatePoints.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
@@ -27,7 +28,7 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath() and self.maska.filePath():
+        if (self.wejscie.filePath() and self.maska.filePath()) or self.silent:
             self.accept()
             self.generatePoints.generate_points(
                 self.wejscie.lineEdit().text(),

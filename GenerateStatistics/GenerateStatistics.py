@@ -66,7 +66,7 @@ class GenerateStatistics:
                                     q_add_to_project, silent=False):
         self.silent = silent
         self.progress = create_progress_bar(
-            0, txt='Trwa generowanie statystyki...')
+            0, txt='Trwa generowanie statystyki...', silent=silent)
         if not self.silent:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.progress.show()
@@ -96,3 +96,5 @@ class GenerateStatistics:
             QMessageBox.information(
                 self.dlg, 'Analiza NMT',
                 'Generowanie statystyki zakończone.', QMessageBox.Ok)
+        else:
+            return

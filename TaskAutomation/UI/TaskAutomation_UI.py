@@ -31,7 +31,7 @@ class TaskAutomation_UI(QDialog, FORM_CLASS):
         }
 
     def setup_dialog(self):
-        self.pushButton_zapisz.clicked.connect(self.taskAutomation.collect_dialogs)
+        self.pushButton_zapisz.clicked.connect(self.taskAutomation.run_tasks_mechanism)
         self.add_cbbx_btn.clicked.connect(self.add_cbbx)
         self.remove_cbbx_btn.clicked.connect(self.remove_cbbx)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

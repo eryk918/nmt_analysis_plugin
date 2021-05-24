@@ -67,7 +67,7 @@ class GenerateSlope:
                           q_add_to_project, silent=False):
         self.silent = silent
         self.progress = create_progress_bar(
-            0, txt='Trwa generowanie modelu nachylenia...')
+            0, txt='Trwa generowanie modelu nachylenia...', silent=silent)
         if not self.silent:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.progress.show()
@@ -86,9 +86,12 @@ class GenerateSlope:
             return self.invalid_data_error()
         if q_add_to_project:
             add_rasters_to_project("NACHYLENIE", self.list_of_splitted_rasters)
+        export_list = self.list_of_splitted_rasters
         self.clean_after_analysis()
         self.dlg.close()
         if not self.silent:
             QMessageBox.information(
                 self.dlg, 'Analiza NMT',
                 'Generowanie modelu nachylenia zakończone.', QMessageBox.Ok)
+        else:
+            return export_list[0] if export_list else None

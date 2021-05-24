@@ -13,10 +13,11 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class GenerateAspect_UI(QDialog, FORM_CLASS):
-    def __init__(self, GenerateAspect, parent=None):
+    def __init__(self, GenerateAspect, parent=None, allow_silent=False):
         super(GenerateAspect_UI, self).__init__(parent)
         self.setupUi(self)
         self.generateAspect = GenerateAspect
+        self.silent = allow_silent
         repair_comboboxes(self)
         self.setWindowIcon(self.generateAspect.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
@@ -27,7 +28,7 @@ class GenerateAspect_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath():
+        if self.wejscie.filePath() or self.silent:
             self.accept()
             self.generateAspect.gen_aspect_process(
                 self.wejscie.lineEdit().text(),

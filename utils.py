@@ -87,7 +87,7 @@ def set_project_config(parameter, key, value):
 
 def create_progress_bar(max_len, title='Proszę czekać',
                         txt='Trwa przetwarzanie danych.', start_val=0,
-                        auto_close=True, cancel_btn=None):
+                        auto_close=True, cancel_btn=None, silent=False):
     progress_bar = QProgressDialog()
     progress_bar.setFixedWidth(500)
     progress_bar.setWindowTitle(title)
@@ -97,6 +97,8 @@ def create_progress_bar(max_len, title='Proszę czekać',
     progress_bar.setAutoClose(auto_close)
     progress_bar.setCancelButton(cancel_btn)
     QApplication.processEvents()
+    if silent:
+        progress_bar.close()
     return progress_bar
 
 
@@ -143,16 +145,22 @@ def add_rasters_to_project(group_name, list_of_rasters, symbology=None):
             rlayer.triggerRepaint()
 
 
-def add_vectors_to_project(group_name, list_of_vectors):
+def add_vectors_to_project(group_name, list_of_vectors, symbology=None):
     QApplication.processEvents()
     group_import = project.layerTreeRoot().findGroup(group_name)
     if not group_import:
         project.layerTreeRoot().addGroup(group_name)
     for vector_path in list_of_vectors:
         QApplication.processEvents()
-        vlayer = QgsVectorLayer(vector_path,
-                                os.path.basename(vector_path), "ogr")
+        if isinstance(vector_path, QgsVectorLayer):
+            vlayer = vector_path
+        else:
+            vlayer = QgsVectorLayer(vector_path, os.path.basename(vector_path),
+                                    "ogr")
         add_map_layer(vlayer, group_name)
+        if symbology:
+            vlayer.loadNamedStyle(symbology)
+            vlayer.triggerRepaint()
 
 
 def open_other_files(filepath, send_by=None):

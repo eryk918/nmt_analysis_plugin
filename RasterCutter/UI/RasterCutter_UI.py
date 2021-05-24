@@ -13,10 +13,11 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class RasterCutter_UI(QDialog, FORM_CLASS):
-    def __init__(self, rasterCutter, parent=None):
+    def __init__(self, rasterCutter, parent=None, allow_silent=False):
         super(RasterCutter_UI, self).__init__(parent)
         self.setupUi(self)
         self.rasterCutter = rasterCutter
+        self.silent = allow_silent
         repair_comboboxes(self)
         self.setWindowIcon(self.rasterCutter.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
@@ -27,7 +28,7 @@ class RasterCutter_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath() and self.maska.filePath():
+        if (self.wejscie.filePath() and self.maska.filePath()) or self.silent:
             self.accept()
             self.rasterCutter.cutting_process(
                 self.wejscie.lineEdit().text(),

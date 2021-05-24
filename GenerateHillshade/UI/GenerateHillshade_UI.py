@@ -13,11 +13,12 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class GenerateHillshade_UI(QDialog, FORM_CLASS):
-    def __init__(self, generateHillshade, parent=None):
+    def __init__(self, generateHillshade, parent=None, allow_silent=False):
         super(GenerateHillshade_UI, self).__init__(parent)
         self.setupUi(self)
         self.generateHillshade = generateHillshade
         repair_comboboxes(self)
+        self.silent = allow_silent
         self.setWindowIcon(self.generateHillshade.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
@@ -27,7 +28,7 @@ class GenerateHillshade_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath():
+        if self.wejscie.filePath() or self.silent:
             self.accept()
             self.generateHillshade.gen_hillshade_process(
                 self.wejscie.lineEdit().text(),

@@ -4,20 +4,22 @@ import os
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
+from qgis.core import QgsCoordinateReferenceSystem
 
 from ...utils import repair_comboboxes, normalize_path, \
-    get_project_config, set_project_config
+    get_project_config, set_project_config, project
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'SetProjection_UI.ui'))
 
 
 class SetProjection_UI(QDialog, FORM_CLASS):
-    def __init__(self, setProjection, parent=None):
+    def __init__(self, setProjection, parent=None, allow_silent=False):
         super(SetProjection_UI, self).__init__(parent)
         self.setupUi(self)
         self.setProjection = setProjection
         repair_comboboxes(self)
+        self.silent = allow_silent
         self.setWindowIcon(self.setProjection.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
@@ -25,14 +27,13 @@ class SetProjection_UI(QDialog, FORM_CLASS):
     def setup_dialog(self):
         self.pushButton_zapisz.clicked.connect(self.validate_fields)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.dest_proj.setCrs(project.crs())
 
     def validate_fields(self):
-        if self.wejscie.filePath() and \
-                self.dest_proj.crs().postgisSrid() != 0:
+        if (self.wejscie.filePath() and self.dest_proj.crs().postgisSrid() != 0) or self.silent:
             self.accept()
             self.setProjection.set_proj_process(
-                self.wejscie.splitFilePaths(
-                    self.wejscie.lineEdit().text())[0],
+                self.wejscie.lineEdit().text(),
                 self.dest_proj.crs().postgisSrid(),
                 normalize_path(self.wyjscie.text()),
                 self.add_to_project_cbbx.isChecked())

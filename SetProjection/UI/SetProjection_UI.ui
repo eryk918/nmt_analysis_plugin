@@ -247,7 +247,7 @@
             <string>*.asc;*.tif; *.xyz; *.shp; *.gpkg</string>
            </property>
            <property name="storageMode">
-            <enum>QgsFileWidget::GetMultipleFiles</enum>
+            <enum>QgsFileWidget::GetFile</enum>
            </property>
           </widget>
          </item>

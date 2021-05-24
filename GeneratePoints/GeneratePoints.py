@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+from datetime import datetime
 from tempfile import mkdtemp
 
-from PyQt5.QtCore import Qt
 from osgeo import gdal
 from qgis import processing
-from qgis.PyQt.QtWidgets import QApplication, QMessageBox
 from qgis.PyQt.QtCore import QVariant
+from qgis.PyQt.QtWidgets import QApplication, QMessageBox
 from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem, \
     QgsRasterLayer, QgsVectorFileWriter, QgsField
 from qgis.gui import QgsProjectionSelectionDialog
@@ -15,7 +15,8 @@ from qgis.utils import iface
 
 from ..GeneratePoints.UI.GeneratePoints_UI import GeneratePoints_UI
 from ..utils import CreateTemporaryLayer, project, create_progress_bar, \
-    add_map_layer, normalize_path, i_iface, change_progressbar_value
+    add_map_layer, normalize_path, i_iface, change_progressbar_value, \
+    add_vectors_to_project, Qt
 
 
 class GeneratePoints:
@@ -95,7 +96,8 @@ class GeneratePoints:
         tmp = CreateTemporaryLayer(f"point?crs=EPSG:{self.actual_crs}",
                                    layer_name,
                                    "memory")
-        tmp.set_fields([QgsField("wysokosc", QVariant.Double, 'double', 20, 1)])
+        tmp.set_fields(
+            [QgsField("wysokosc", QVariant.Double, 'double', 20, 1)])
         return tmp
 
     def add_and_set_final_features(self, dest_layer, min_values, max_values):
@@ -109,7 +111,8 @@ class GeneratePoints:
 
     def split_raster_by_mask(self, input_raster, mask):
         gdal.UseExceptions()
-        change_progressbar_value(self.progress, self.last_progress_value, 2, silent=self.silent)
+        change_progressbar_value(self.progress, self.last_progress_value, 2,
+                                 silent=self.silent)
         raster_counter = 1
         base_raster = QgsRasterLayer(input_raster, "base")
         prj = base_raster.crs().postgisSrid()
@@ -126,7 +129,8 @@ class GeneratePoints:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         mask_layer, tmp_mask_name, mask = \
             self.check_vector_crs_and_translate(mask, prj, self.tmp_dir)
-        change_progressbar_value(self.progress, self.last_progress_value, 4, silent=self.silent)
+        change_progressbar_value(self.progress, self.last_progress_value, 4,
+                                 silent=self.silent)
         rand_field = mask_layer.fields().names()[0]
         self.number_of_features = [feature for feature in
                                    mask_layer.getFeatures()]
@@ -134,8 +138,7 @@ class GeneratePoints:
             tmp_raster_name = \
                 f'''{os.path.basename(input_raster)}_{raster_counter}.tif'''
             tmp_raster_filepath = os.path.join(self.tmp_dir, tmp_raster_name)
-            sql = f'''SELECT * FROM {tmp_mask_name} 
-                                WHERE "{rand_field}" LIKE '{feat[0]}' '''
+            sql = f'''SELECT * FROM "{tmp_mask_name}" WHERE "{rand_field}" = '{feat[0]}' '''
             ds = gdal.Warp(tmp_raster_filepath, input_raster,
                            cutlineDSName=mask,
                            srcSRS=f'''EPSG:{prj}''',
@@ -146,7 +149,8 @@ class GeneratePoints:
             ds = None
             self.list_of_splitted_rasters.append(tmp_raster_filepath)
             change_progressbar_value(self.progress, self.last_progress_value,
-                                     22 / len(self.number_of_features), silent=self.silent)
+                                     22 / len(self.number_of_features),
+                                     silent=self.silent)
             raster_counter += 1
 
     def raster_to_vector_point(self, src_raster):
@@ -163,10 +167,10 @@ class GeneratePoints:
 
     def check_vector_crs_and_translate(self, mask, dest_prj, tmp_dir):
         mask_layer = QgsVectorLayer(mask, mask, "ogr")
+        time = datetime.now().strftime('%H%M%f')
         if mask_layer.crs() != dest_prj:
-            tmp_mask_name = \
-                f'''{os.path.basename(mask).split(".")[0]}_converted'''
-            tmp_mask_filepath = os.path.join(tmp_dir, f'{tmp_mask_name}.shp')
+            tmp_mask_name = f'''mask_{time}'''
+            tmp_mask_filepath = os.path.join(tmp_dir, f"{tmp_mask_name}.shp")
             reprojected_mask = processing.run(
                 'qgis:reprojectlayer',
                 {'INPUT': mask, 'OUTPUT': tmp_mask_filepath,
@@ -214,7 +218,8 @@ class GeneratePoints:
         self.silent = silent
         self.progress = \
             create_progress_bar(
-                100, txt='Trwa generowanie punktów wysokościowych...')
+                100, txt='Trwa generowanie punktów wysokościowych...',
+                silent=silent)
         if not self.silent:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.progress.show()
@@ -222,12 +227,13 @@ class GeneratePoints:
         self.list_of_splitted_rasters = []
         self.list_of_vectorized_layers = []
         self.last_progress_value = 0
-        change_progressbar_value(self.progress, self.last_progress_value, 0, silent=self.silent)
+        change_progressbar_value(self.progress, self.last_progress_value, 0,
+                                 silent=self.silent)
         filename = input_files.split('\\')[-1].strip(
             input_files.split("\\")[-1].split('.')[-1])[:-1]
         qml_path = normalize_path(
             os.path.join(self.main.plugin_dir,
-            '..\\GeneratePoints\\utils\\punkty_wys.qml'))
+                         '..\\GeneratePoints\\points.qml'))
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:
@@ -246,9 +252,8 @@ class GeneratePoints:
                 return self.invalid_data_error()
             self.add_and_set_final_features(tmp_lyr, najnizsze, najwyzsze)
             change_progressbar_value(self.progress, self.last_progress_value,
-                                     46 / len(self.list_of_vectorized_layers), silent=self.silent)
-        tmp_lyr.loadNamedStyle(qml_path)
-        tmp_lyr.triggerRepaint()
+                                     46 / len(self.list_of_vectorized_layers),
+                                     silent=self.silent)
         if export_directory not in (".", ""):
             _writer = QgsVectorFileWriter.writeAsVectorFormat(tmp_lyr,
                                                               export_directory,
@@ -260,12 +265,13 @@ class GeneratePoints:
             change_progressbar_value(self.progress, self.last_progress_value,
                                      5, silent=self.silent)
             if q_add_to_project:
-                self.add_vector_to_project(
-                    QgsVectorLayer(export_directory,
-                                   f'{filename}_analiza', "ogr"),
-                    "PUNKTY_WYSOKOSCIOWE")
+                add_vectors_to_project(
+                    "WYGENEROWANE_PUNKTY",
+                    [QgsVectorLayer(export_directory, f'{filename}_analiza',
+                                    "ogr")],
+                    export_directory.replace(".shp", ".qml"))
         if q_add_to_project and export_directory in (".", ""):
-            self.add_vector_to_project(tmp_lyr, "PUNKTY_WYSOKOSCIOWE")
+            add_vectors_to_project("WYGENEROWANE_PUNKTY", [tmp_lyr], qml_path)
         self.clean_after_analysis()
         change_progressbar_value(self.progress, self.last_progress_value, 5,
                                  True, silent=self.silent)
@@ -275,3 +281,6 @@ class GeneratePoints:
                 self.dlg, 'Analiza NMT',
                 'Generowanie punktów wysokościowych zakończone.',
                 QMessageBox.Ok)
+        else:
+            return export_directory if export_directory not in (".", "") \
+                else tmp_lyr.source()

@@ -13,11 +13,12 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class GenerateSlope_UI(QDialog, FORM_CLASS):
-    def __init__(self, generateSlope, parent=None):
+    def __init__(self, generateSlope, parent=None, allow_silent=False):
         super(GenerateSlope_UI, self).__init__(parent)
         self.setupUi(self)
         self.generateSlope = generateSlope
         repair_comboboxes(self)
+        self.silent = allow_silent
         self.setWindowIcon(self.generateSlope.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
@@ -27,7 +28,7 @@ class GenerateSlope_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath():
+        if self.wejscie.filePath() or self.silent:
             self.accept()
             self.generateSlope.gen_slope_process(
                 self.wejscie.lineEdit().text(),

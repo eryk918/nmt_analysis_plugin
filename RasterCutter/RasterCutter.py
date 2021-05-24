@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+from datetime import datetime
 from tempfile import mkdtemp
 
-from PyQt5.QtCore import Qt
 from osgeo import gdal
 from qgis import processing
-from qgis.PyQt.QtWidgets import QApplication, QMessageBox
+from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem, \
     QgsRasterLayer
 from qgis.gui import QgsProjectionSelectionDialog
@@ -14,7 +14,7 @@ from qgis.utils import iface
 
 from ..RasterCutter.UI.RasterCutter_UI import RasterCutter_UI
 from ..utils import project, create_progress_bar, i_iface, \
-    add_map_layer, normalize_path, change_progressbar_value
+    add_map_layer, normalize_path, change_progressbar_value, Qt
 
 
 class RasterCutter:
@@ -32,7 +32,8 @@ class RasterCutter:
 
     def split_raster_by_mask(self, input_raster, mask):
         gdal.UseExceptions()
-        change_progressbar_value(self.progress, self.last_progress_value, 2, silent=self.silent)
+        change_progressbar_value(self.progress, self.last_progress_value, 2,
+                                 silent=self.silent)
         raster_counter = 1
         base_raster = QgsRasterLayer(input_raster, "base")
         prj = base_raster.crs().postgisSrid()
@@ -47,7 +48,8 @@ class RasterCutter:
         self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
         mask_layer, tmp_mask_name, mask = \
             self.check_vector_crs_and_translate(mask, prj, self.tmp_dir)
-        change_progressbar_value(self.progress, self.last_progress_value, 4, silent=self.silent)
+        change_progressbar_value(self.progress, self.last_progress_value, 4,
+                                 silent=self.silent)
         rand_field = mask_layer.fields().names()[0]
         self.number_of_features = [feature for feature in
                                    mask_layer.getFeatures()]
@@ -61,8 +63,7 @@ class RasterCutter:
             else:
                 tmp_raster_filepath = os.path.join(self.export_path,
                                                    tmp_raster_name)
-            sql = f'''SELECT * FROM {tmp_mask_name} 
-                                WHERE "{rand_field}" LIKE '{feat[0]}' '''
+            sql = f'''SELECT * FROM "{tmp_mask_name}" WHERE "{rand_field}" = '{feat[0]}' '''
             ds = gdal.Warp(tmp_raster_filepath, input_raster,
                            cutlineDSName=mask,
                            srcSRS=f'''EPSG:{prj}''',
@@ -73,7 +74,8 @@ class RasterCutter:
             ds = None
             self.list_of_splitted_rasters.append(tmp_raster_filepath)
             change_progressbar_value(self.progress, self.last_progress_value,
-                                     90 / len(self.number_of_features), silent=self.silent)
+                                     90 / len(self.number_of_features),
+                                     silent=self.silent)
             raster_counter += 1
 
     def add_rasters_to_project(self, group_name):
@@ -86,10 +88,10 @@ class RasterCutter:
 
     def check_vector_crs_and_translate(self, mask, dest_prj, tmp_dir):
         mask_layer = QgsVectorLayer(mask, mask, "ogr")
+        time = datetime.now().strftime('%H%M%f')
         if mask_layer.crs() != dest_prj:
-            tmp_mask_name = \
-                f'''{os.path.basename(mask).split(".")[0]}_converted'''
-            tmp_mask_filepath = os.path.join(tmp_dir, f'{tmp_mask_name}.shp')
+            tmp_mask_name = f'''mask_{time}'''
+            tmp_mask_filepath = os.path.join(tmp_dir, f"{tmp_mask_name}.shp")
             reprojected_mask = processing.run(
                 'qgis:reprojectlayer',
                 {'INPUT': mask, 'OUTPUT': tmp_mask_filepath,
@@ -130,7 +132,7 @@ class RasterCutter:
                         q_add_to_project, silent=False):
         self.silent = silent
         self.progress = create_progress_bar(100,
-                                            txt='Trwa przycinanie rastra...')
+                                            txt='Trwa przycinanie rastra...', silent=silent)
         if not self.silent:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.progress.show()
@@ -143,13 +145,15 @@ class RasterCutter:
             self.tmp_layers_flag = True
         self.list_of_splitted_rasters = []
         self.last_progress_value = 0
-        change_progressbar_value(self.progress, self.last_progress_value, 0, silent=self.silent)
+        change_progressbar_value(self.progress, self.last_progress_value, 0,
+                                 silent=self.silent)
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:
             return self.invalid_data_error()
         if q_add_to_project:
             self.add_rasters_to_project("POCIĘTE RASTRY")
+        export_list = self.list_of_splitted_rasters
         self.clean_after_analysis()
         change_progressbar_value(self.progress, self.last_progress_value, 4,
                                  True, silent=self.silent)
@@ -159,3 +163,6 @@ class RasterCutter:
                 self.dlg, 'Analiza NMT',
                 'Przycinanie rastra zakończone.',
                 QMessageBox.Ok)
+        else:
+            # TODO: Co z tym zrobić?
+            return export_list

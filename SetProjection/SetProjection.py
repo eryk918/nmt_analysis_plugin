@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+from datetime import datetime
 from tempfile import mkdtemp
 
-from PyQt5.QtCore import Qt
 from qgis import processing
 from qgis.PyQt.QtWidgets import QMessageBox, QApplication
+from qgis.core import QgsVectorLayer
 
 from ..SetProjection.UI.SetProjection_UI import SetProjection_UI
 from ..utils import project, create_progress_bar, i_iface, \
-    normalize_path, add_rasters_to_project, add_vectors_to_project
+    normalize_path, add_rasters_to_project, add_vectors_to_project, Qt
 
 
 class SetProjection:
@@ -42,20 +43,29 @@ class SetProjection:
         if hasattr(self, "progress"):
             self.progress.close()
         self.list_of_layers = []
-        if not self.tmp_layers_flag:
+        if self.tmp_layers_flag:
             shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
     def set_projection(self, input_layer, dest_crs):
+        time = datetime.now().strftime('%H%M%f')
         if not self.tmp_layers_flag:
-            tmp_layer_filepath = os.path.join(
-                self.tmp_dir, f'{os.path.basename(input_layer)}')
+            if os.path.exists(input_layer):
+                tmp_layer_filepath = os.path.join(
+                    self.tmp_dir, f'{os.path.basename(input_layer)}')
+            else:
+                tmp_layer_filepath = \
+                    os.path.join(self.tmp_dir, f'''projected_{time}.shp''')
         else:
-            tmp_layer_filepath = os.path.join(
-                self.export_path, f'{os.path.basename(input_layer)}')
-
-        if os.path.splitext(input_layer)[-1] in ('.shp', '.gpkg'):
+            if os.path.exists(input_layer):
+                tmp_layer_filepath = os.path.join(
+                    self.export_path, f'{os.path.basename(input_layer)}')
+            else:
+                tmp_layer_filepath = os.path.join(
+                    self.export_path, f'''projected_{time}.shp''')
+        if QgsVectorLayer(input_layer, 'test', 'ogr').isValid() or \
+                'uid={' in input_layer:
             processing.run(
-                'qgis:reprojectlayer',
+                'native:reprojectlayer',
                 {'INPUT': input_layer, 'OUTPUT': tmp_layer_filepath,
                  'TARGET_CRS': f'EPSG:{dest_crs}'})
         else:
@@ -69,12 +79,12 @@ class SetProjection:
                          export_directory, q_add_to_project, silent=False):
         self.silent = silent
         self.progress = create_progress_bar(
-            0, txt='Trwa nadawanie odwzorowania...')
+            0, txt='Trwa nadawanie odwzorowania...', silent=silent)
         if not self.silent:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.progress.show()
         QApplication.processEvents()
-        self.tmp_dir = mkdtemp(suffix=f'nmt_set_projection')
+        self.tmp_dir = mkdtemp(suffix=f'_nmt_set_projection')
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
                 export_directory != ".":
@@ -94,9 +104,12 @@ class SetProjection:
                     add_vectors_to_project("PRZETŁUMACZONE_WARSTWY", [lyr])
                 else:
                     add_rasters_to_project("PRZETŁUMACZONE_WARSTWY", [lyr])
+        export_list = self.list_of_layers
         self.clean_after_analysis()
         self.dlg.close()
         if not self.silent:
             QMessageBox.information(
                 self.dlg, 'Analiza NMT',
                 'Nadawanie odwzorowania zakończone.', QMessageBox.Ok)
+        else:
+            return export_list[0] if export_list else None

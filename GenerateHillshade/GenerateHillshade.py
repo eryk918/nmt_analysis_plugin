@@ -3,13 +3,12 @@ import os
 import shutil
 from tempfile import mkdtemp
 
-from PyQt5.QtCore import Qt
 from qgis import processing
 from qgis.PyQt.QtWidgets import QMessageBox, QApplication
 
 from ..GenerateHillshade.UI.GenerateHillshade_UI import GenerateHillshade_UI
 from ..utils import project, create_progress_bar, i_iface, \
-    normalize_path, add_rasters_to_project
+    normalize_path, add_rasters_to_project, Qt
 
 
 class GenerateHillshade:
@@ -61,10 +60,11 @@ class GenerateHillshade:
         self.list_of_splitted_rasters.append(tmp_raster_filepath)
 
     def gen_hillshade_process(self, input_files, zfactor, azimuth, v_angle,
-                              export_directory, q_add_to_project, silent=False):
+                              export_directory, q_add_to_project,
+                              silent=False):
         self.silent = silent
         self.progress = create_progress_bar(
-            0, txt='Trwa generowanie modelu cieniowania...')
+            0, txt='Trwa generowanie modelu cieniowania...', silent=silent)
         if not self.silent:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.progress.show()
@@ -88,9 +88,12 @@ class GenerateHillshade:
         if q_add_to_project:
             add_rasters_to_project("CIENIOWANIE",
                                    self.list_of_splitted_rasters, qml_path)
+        export_list = self.list_of_splitted_rasters
         self.clean_after_analysis()
         self.dlg.close()
         if not self.silent:
             QMessageBox.information(
                 self.dlg, 'Analiza NMT',
                 'Generowanie modelu cienowania zakończone.', QMessageBox.Ok)
+        else:
+            return export_list[0] if export_list else None

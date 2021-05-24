@@ -29,16 +29,16 @@ from qgis.PyQt import QtWidgets, QtGui
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QMessageBox
 
-from ..TaskAutomation.TaskAutomation import TaskAutomation
-from ..GeneratePolygons.GeneratePolygons import GeneratePolygons
 from ..Generate3DModel.Generate3DModel import Generate3DModel
 from ..GenerateAspect.GenerateAspect import GenerateAspect
 from ..GenerateHillshade.GenerateHillshade import GenerateHillshade
 from ..GeneratePoints.GeneratePoints import GeneratePoints
+from ..GeneratePolygons.GeneratePolygons import GeneratePolygons
 from ..GenerateSlope.GenerateSlope import GenerateSlope
 from ..GenerateStatistics.GenerateStatistics import GenerateStatistics
 from ..RasterCutter.RasterCutter import RasterCutter
 from ..SetProjection.SetProjection import SetProjection
+from ..TaskAutomation.TaskAutomation import TaskAutomation
 from ..utils import normalize_path
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -108,10 +108,9 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         self.btn_about.clicked.connect(self.show_info_about_plugin)
 
     def show_info_about_plugin(self):
-        QMessageBox.information(
+        QMessageBox.about(
             self, 'O wtyczce - Analiza NMT',
-            'Wtyczka powstała na potrzeby pracy licencjackiej.\n'
-            'Temat: "Opracowanie wtyczki QGIS umożliwiającej\n'
+            'Wtyczka powstała na potrzeby pracy licencjackiej.\n\n'
+            'Temat: "Opracowanie wtyczki QGIS umożliwiającej '
             'zautomatyzowane analizy numerycznych modeli terenu"\n'
-            'Autor: Eryk Chełchowski\n',
-            QMessageBox.Ok)
+            'Autor: Eryk Chełchowski')

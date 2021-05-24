@@ -13,7 +13,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class GeneratePolygons_UI(QDialog, FORM_CLASS):
-    def __init__(self, generatePolygons, parent=None):
+    def __init__(self, generatePolygons, parent=None, allow_silent=False):
         super(GeneratePolygons_UI, self).__init__(parent)
         self.setupUi(self)
         self.generatePolygons = generatePolygons
@@ -21,6 +21,7 @@ class GeneratePolygons_UI(QDialog, FORM_CLASS):
         self.setWindowIcon(self.generatePolygons.main.icon)
         self.output_layer_btn.clicked.connect(self.get_output_file)
         self.wyjscie.textChanged.connect(self.enable_checkbox)
+        self.silent = allow_silent
         self.polygon_type = {
             'prostokąt': 0,
             'romb': 1,
@@ -33,7 +34,7 @@ class GeneratePolygons_UI(QDialog, FORM_CLASS):
         self.feat_type_cbbx.addItems(self.polygon_type.keys())
 
     def validate_fields(self):
-        if self.wejscie.filePath() and self.maska.filePath():
+        if (self.wejscie.filePath() and self.maska.filePath()) or self.silent:
             self.accept()
             self.generatePolygons.generate_polys(
                 self.wejscie.lineEdit().text(),

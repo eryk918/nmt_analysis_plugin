@@ -181,7 +181,7 @@
          <item row="0" column="0">
           <widget class="QLineEdit" name="wyjscie">
            <property name="placeholderText">
-            <string>[Utwórz warstwę tymczasową]</string>
+            <string>[Utwórz raport tymczasowy]</string>
            </property>
           </widget>
          </item>
