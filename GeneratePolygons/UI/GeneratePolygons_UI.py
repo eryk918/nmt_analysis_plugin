@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
 
-from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 from ...utils import repair_comboboxes, \
-    normalize_path, get_project_config, set_project_config
+    standarize_path, get_project_settings, set_project_settings, Qt
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'GeneratePolygons_UI.ui'))
@@ -25,7 +24,7 @@ class GeneratePolygons_UI(QDialog, FORM_CLASS):
         self.polygon_type = {
             'prostokąt': 0,
             'romb': 1,
-            'owal': 2
+            'wielokąt': 2
         }
 
     def setup_dialog(self):
@@ -39,7 +38,7 @@ class GeneratePolygons_UI(QDialog, FORM_CLASS):
             self.generatePolygons.generate_polys(
                 self.wejscie.lineEdit().text(),
                 self.maska.lineEdit().text(),
-                normalize_path(self.wyjscie.text()),
+                standarize_path(self.wyjscie.text()),
                 self.height_spinbox.value(),
                 self.add_to_project_cbbx.isChecked(),
                 self.offset_spinbox.value(),
@@ -62,15 +61,15 @@ class GeneratePolygons_UI(QDialog, FORM_CLASS):
             self.add_to_project_cbbx.setEnabled(False)
 
     def get_output_file(self):
-        path = get_project_config('NMT_analysis', 'nmt_poly_export_path', '')
+        path = get_project_settings('NMT_analysis', 'nmt_poly_export_path', '')
         if not os.path.exists(path):
             path = ""
         filename, __ = QFileDialog.getSaveFileName(
             self, "Zapisz plik", path, "*.shp")
         if filename:
             self.wyjscie.setText(filename)
-        set_project_config('NMT_analysis', 'nmt_poly_export_path',
-                           os.path.dirname(normalize_path(filename)))
+        set_project_settings('NMT_analysis', 'nmt_poly_export_path',
+                           os.path.dirname(standarize_path(filename)))
 
     def run_dialog(self):
         self.show()

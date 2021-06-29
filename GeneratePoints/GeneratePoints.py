@@ -11,18 +11,17 @@ from qgis.PyQt.QtWidgets import QApplication, QMessageBox
 from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem, \
     QgsRasterLayer, QgsVectorFileWriter, QgsField
 from qgis.gui import QgsProjectionSelectionDialog
-from qgis.utils import iface
 
 from ..GeneratePoints.UI.GeneratePoints_UI import GeneratePoints_UI
 from ..utils import CreateTemporaryLayer, project, create_progress_bar, \
-    add_map_layer, normalize_path, i_iface, change_progressbar_value, \
+    add_layer_into_map, standarize_path, iface, change_progressbar_value, \
     add_vectors_to_project, Qt
 
 
 class GeneratePoints:
     def __init__(self, parent):
         self.main = parent
-        self.iface = i_iface
+        self.iface = iface
         self.project_path = os.path.dirname(
             os.path.abspath(project.fileName()))
         self.actual_crs = project.crs().postgisSrid()
@@ -96,8 +95,8 @@ class GeneratePoints:
         tmp = CreateTemporaryLayer(f"point?crs=EPSG:{self.actual_crs}",
                                    layer_name,
                                    "memory")
-        tmp.set_fields(
-            [QgsField("wysokosc", QVariant.Double, 'double', 20, 1)])
+        tmp.set_layer_fields(
+            [QgsField("wysokosc", QVariant.Double, 'double', 20, 2)])
         return tmp
 
     def add_and_set_final_features(self, dest_layer, min_values, max_values):
@@ -147,7 +146,7 @@ class GeneratePoints:
                            creationOptions=['COMPRESS=LZW'],
                            cropToCutline=True, multithread=True)
             ds = None
-            self.list_of_splitted_rasters.append(tmp_raster_filepath)
+            self.list_of_created_rasters.append(tmp_raster_filepath)
             change_progressbar_value(self.progress, self.last_progress_value,
                                      22 / len(self.number_of_features),
                                      silent=self.silent)
@@ -191,7 +190,7 @@ class GeneratePoints:
         group_import = project.layerTreeRoot().findGroup(group_name)
         if not group_import:
             project.layerTreeRoot().addGroup(group_name)
-        add_map_layer(layer, group_name)
+        add_layer_into_map(layer, group_name)
 
     def invalid_data_error(self):
         if hasattr(self, "progress"):
@@ -208,7 +207,7 @@ class GeneratePoints:
                 QMessageBox.Ok)
 
     def clean_after_analysis(self):
-        self.list_of_splitted_rasters = []
+        self.list_of_created_rasters = []
         self.list_of_vectorized_layers = []
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
@@ -224,25 +223,25 @@ class GeneratePoints:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.progress.show()
         self.tmp_dir = mkdtemp(suffix=f'nmt_gen_point')
-        self.list_of_splitted_rasters = []
+        self.list_of_created_rasters = []
         self.list_of_vectorized_layers = []
         self.last_progress_value = 0
         change_progressbar_value(self.progress, self.last_progress_value, 0,
                                  silent=self.silent)
         filename = input_files.split('\\')[-1].strip(
             input_files.split("\\")[-1].split('.')[-1])[:-1]
-        qml_path = normalize_path(
+        qml_path = standarize_path(
             os.path.join(self.main.plugin_dir,
                          '..\\GeneratePoints\\points.qml'))
         try:
             self.split_raster_by_mask(input_files, mask_file)
         except RuntimeError:
             return self.invalid_data_error()
-        for raster in self.list_of_splitted_rasters:
+        for raster in self.list_of_created_rasters:
             self.raster_to_vector_point(raster)
             change_progressbar_value(
                 self.progress, self.last_progress_value,
-                16 / len(self.list_of_splitted_rasters), silent=self.silent)
+                16 / len(self.list_of_created_rasters), silent=self.silent)
         tmp_lyr = self.create_tmp_layer(f'{filename}_pkt_wys')
         for vector in self.list_of_vectorized_layers:
             try:

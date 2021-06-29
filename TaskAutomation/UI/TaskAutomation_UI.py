@@ -49,7 +49,7 @@ class TaskAutomation_UI(QDialog, FORM_CLASS):
             QMessageBox.warning(
                 self, 'Ostrzeżenie',
                 'Nie można dodać kolejnego pola!\n'
-                'Okno dialogowe jest większe niż wysokość ekranu!',
+                'Rozdzielczość ekranu jest za niska by zmieścić okno dialogowe!',
                 QMessageBox.Ok)
             return
         self.cbbx_nbr += 1

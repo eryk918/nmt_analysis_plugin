@@ -9,14 +9,14 @@ from qgis.PyQt.QtWidgets import QMessageBox, QApplication
 from qgis.core import QgsVectorLayer
 
 from ..SetProjection.UI.SetProjection_UI import SetProjection_UI
-from ..utils import project, create_progress_bar, i_iface, \
-    normalize_path, add_rasters_to_project, add_vectors_to_project, Qt
+from ..utils import project, create_progress_bar, iface, \
+    standarize_path, add_rasters_to_project, add_vectors_to_project, Qt
 
 
 class SetProjection:
     def __init__(self, parent):
         self.main = parent
-        self.iface = i_iface
+        self.iface = iface
         self.project_path = os.path.dirname(
             os.path.abspath(project.fileName()))
         self.actual_crs = project.crs().postgisSrid()
@@ -47,31 +47,34 @@ class SetProjection:
             shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
     def set_projection(self, input_layer, dest_crs):
-        time = datetime.now().strftime('%H%M%f')
+        time = datetime.now().strftime('%H_%M_%S_%f')[:-3]
         if not self.tmp_layers_flag:
-            if os.path.exists(input_layer):
-                tmp_layer_filepath = os.path.join(
+            tmp_layer_filepath = os.path.join(
                     self.tmp_dir, f'{os.path.basename(input_layer)}')
-            else:
+            if os.path.exists(tmp_layer_filepath):
                 tmp_layer_filepath = \
-                    os.path.join(self.tmp_dir, f'''projected_{time}.shp''')
+                    os.path.join(
+                        self.tmp_dir,
+                        f'{os.path.splitext(os.path.basename(input_layer))[0]}_{time}')
         else:
-            if os.path.exists(input_layer):
+            tmp_layer_filepath = os.path.join(
+                self.export_path, f'{os.path.basename(input_layer)}')
+            if os.path.exists(tmp_layer_filepath):
                 tmp_layer_filepath = os.path.join(
-                    self.export_path, f'{os.path.basename(input_layer)}')
-            else:
-                tmp_layer_filepath = os.path.join(
-                    self.export_path, f'''projected_{time}.shp''')
+                    self.export_path,
+                    f'{os.path.splitext(os.path.basename(input_layer))[0]}_{time}')
         if QgsVectorLayer(input_layer, 'test', 'ogr').isValid() or \
                 'uid={' in input_layer:
             processing.run(
                 'native:reprojectlayer',
-                {'INPUT': input_layer, 'OUTPUT': tmp_layer_filepath,
+                {'INPUT': input_layer, 'OUTPUT':
+                    f'{os.path.splitext(tmp_layer_filepath)[0]}.shp',
                  'TARGET_CRS': f'EPSG:{dest_crs}'})
         else:
             processing.run(
                 'gdal:translate',
-                {'INPUT': input_layer, 'OUTPUT': tmp_layer_filepath,
+                {'INPUT': input_layer, 'OUTPUT':
+                    f'{os.path.splitext(tmp_layer_filepath)[0]}.tif',
                  'TARGET_CRS': f'EPSG:{dest_crs}'})
         self.list_of_layers.append(tmp_layer_filepath)
 
@@ -88,11 +91,10 @@ class SetProjection:
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
                 export_directory != ".":
-            self.export_path = normalize_path(export_directory)
+            self.export_path = standarize_path(export_directory)
             self.tmp_layers_flag = True
         self.list_of_layers = []
         self.last_progress_value = 0
-        self.layer_type = None
         QApplication.processEvents()
         try:
             self.set_projection(input_files, dest_crs)

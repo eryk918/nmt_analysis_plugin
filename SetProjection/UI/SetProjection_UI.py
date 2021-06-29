@@ -6,8 +6,8 @@ from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 from qgis.core import QgsCoordinateReferenceSystem
 
-from ...utils import repair_comboboxes, normalize_path, \
-    get_project_config, set_project_config, project
+from ...utils import repair_comboboxes, standarize_path, \
+    get_project_settings, set_project_settings, project
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'SetProjection_UI.ui'))
@@ -35,7 +35,7 @@ class SetProjection_UI(QDialog, FORM_CLASS):
             self.setProjection.set_proj_process(
                 self.wejscie.lineEdit().text(),
                 self.dest_proj.crs().postgisSrid(),
-                normalize_path(self.wyjscie.text()),
+                standarize_path(self.wyjscie.text()),
                 self.add_to_project_cbbx.isChecked())
         else:
             QMessageBox.warning(
@@ -52,7 +52,7 @@ class SetProjection_UI(QDialog, FORM_CLASS):
 
     def get_output_file(self):
         if self.wejscie.lineEdit().text():
-            path = get_project_config('NMT_analysis', 'set_projection', '')
+            path = get_project_settings('NMT_analysis', 'set_projection', '')
             if not os.path.exists(path):
                 path = ""
             filename = QFileDialog.getExistingDirectory(
@@ -60,8 +60,8 @@ class SetProjection_UI(QDialog, FORM_CLASS):
                 path)
             if filename:
                 self.wyjscie.setText(filename)
-            set_project_config('NMT_analysis', 'set_projection',
-                               os.path.dirname(normalize_path(filename)))
+            set_project_settings('NMT_analysis', 'set_projection',
+                               os.path.dirname(standarize_path(filename)))
         else:
             QMessageBox.warning(
                 self, 'Ostrzeżenie',

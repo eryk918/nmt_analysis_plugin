@@ -3,19 +3,18 @@ import os
 import shutil
 from tempfile import mkdtemp
 
-from PyQt5.QtCore import Qt
 from qgis import processing
 from qgis.PyQt.QtWidgets import QMessageBox, QApplication
 
 from ..GenerateSlope.UI.GenerateSlope_UI import GenerateSlope_UI
-from ..utils import project, create_progress_bar, i_iface, \
-    normalize_path, add_rasters_to_project
+from ..utils import project, create_progress_bar, iface, \
+    standarize_path, add_rasters_to_project, Qt
 
 
 class GenerateSlope:
     def __init__(self, parent):
         self.main = parent
-        self.iface = i_iface
+        self.iface = iface
         self.project_path = os.path.dirname(
             os.path.abspath(project.fileName()))
         self.actual_crs = project.crs().postgisSrid()
@@ -43,7 +42,7 @@ class GenerateSlope:
         QApplication.processEvents()
         if hasattr(self, "progress"):
             self.progress.close()
-        self.list_of_splitted_rasters = []
+        self.list_of_created_rasters = []
         if not self.tmp_layers_flag:
             shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
@@ -55,13 +54,12 @@ class GenerateSlope:
                     os.path.basename(input_raster))[0]}.tif''')
         else:
             tmp_raster_filepath = self.export_path
-        QApplication.processEvents()
         processing.run(
             'qgis:slope',
             {'INPUT': input_raster, 'OUTPUT': tmp_raster_filepath,
              'Z_FACTOR': zfactor})
         QApplication.processEvents()
-        self.list_of_splitted_rasters.append(tmp_raster_filepath)
+        self.list_of_created_rasters.append(tmp_raster_filepath)
 
     def gen_slope_process(self, input_files, zfactor, export_directory,
                           q_add_to_project, silent=False):
@@ -75,9 +73,9 @@ class GenerateSlope:
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
                 export_directory != ".":
-            self.export_path = normalize_path(export_directory)
+            self.export_path = standarize_path(export_directory)
             self.tmp_layers_flag = True
-        self.list_of_splitted_rasters = []
+        self.list_of_created_rasters = []
         self.last_progress_value = 0
         QApplication.processEvents()
         try:
@@ -85,8 +83,8 @@ class GenerateSlope:
         except RuntimeError:
             return self.invalid_data_error()
         if q_add_to_project:
-            add_rasters_to_project("NACHYLENIE", self.list_of_splitted_rasters)
-        export_list = self.list_of_splitted_rasters
+            add_rasters_to_project("NACHYLENIE", self.list_of_created_rasters)
+        export_list = self.list_of_created_rasters
         self.clean_after_analysis()
         self.dlg.close()
         if not self.silent:

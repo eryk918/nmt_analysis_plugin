@@ -6,7 +6,7 @@ from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 from ...utils import repair_comboboxes, \
-    normalize_path, get_project_config, set_project_config
+    standarize_path, get_project_settings, set_project_settings
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'GeneratePoints_UI.ui'))
@@ -33,7 +33,7 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
             self.generatePoints.generate_points(
                 self.wejscie.lineEdit().text(),
                 self.maska.lineEdit().text(),
-                normalize_path(self.wyjscie.text()),
+                standarize_path(self.wyjscie.text()),
                 int(self.analiza_min.text()),
                 int(self.analiza_max.text()),
                 self.add_to_project_cbbx.isChecked(),
@@ -53,15 +53,15 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
             self.add_to_project_cbbx.setEnabled(False)
 
     def get_output_file(self):
-        path = get_project_config('NMT_analysis', 'nmt_export_path', '')
+        path = get_project_settings('NMT_analysis', 'nmt_export_path', '')
         if not os.path.exists(path):
             path = ""
         filename, __ = QFileDialog.getSaveFileName(
             self, "Zapisz plik", path, "*.shp")
         if filename:
             self.wyjscie.setText(filename)
-        set_project_config('NMT_analysis', 'nmt_export_path',
-                           os.path.dirname(normalize_path(filename)))
+        set_project_settings('NMT_analysis', 'nmt_export_path',
+                           os.path.dirname(standarize_path(filename)))
 
     def run_dialog(self):
         self.show()

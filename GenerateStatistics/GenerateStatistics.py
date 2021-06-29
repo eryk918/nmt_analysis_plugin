@@ -8,14 +8,14 @@ from qgis import processing
 from qgis.PyQt.QtWidgets import QMessageBox, QApplication
 
 from ..GenerateStatistics.UI.GenerateStatistics_UI import GenerateStatistics_UI
-from ..utils import project, create_progress_bar, i_iface, normalize_path, \
+from ..utils import project, create_progress_bar, iface, standarize_path, \
     open_other_files, Qt
 
 
 class GenerateStatistics:
     def __init__(self, parent):
         self.main = parent
-        self.iface = i_iface
+        self.iface = iface
         self.project_path = os.path.dirname(
             os.path.abspath(project.fileName()))
         self.actual_crs = project.crs().postgisSrid()
@@ -75,7 +75,7 @@ class GenerateStatistics:
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
                 export_directory != ".":
-            self.export_path = normalize_path(export_directory)
+            self.export_path = standarize_path(export_directory)
             self.tmp_layers_flag = True
         self.list_of_files = []
         self.last_progress_value = 0

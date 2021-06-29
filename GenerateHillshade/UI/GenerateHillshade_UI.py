@@ -5,8 +5,8 @@ from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 
-from ...utils import repair_comboboxes, normalize_path, \
-    get_project_config, set_project_config
+from ...utils import repair_comboboxes, standarize_path, \
+    get_project_settings, set_project_settings
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'GenerateHillshade_UI.ui'))
@@ -35,7 +35,7 @@ class GenerateHillshade_UI(QDialog, FORM_CLASS):
                 self.zindex_spinbox.value(),
                 self.azimuth.value(),
                 self.vertical_angle.value(),
-                normalize_path(self.wyjscie.text()),
+                standarize_path(self.wyjscie.text()),
                 self.add_to_project_cbbx.isChecked())
         else:
             QMessageBox.warning(
@@ -51,7 +51,7 @@ class GenerateHillshade_UI(QDialog, FORM_CLASS):
             self.add_to_project_cbbx.setEnabled(False)
 
     def get_output_file(self):
-        path = get_project_config('NMT_analysis', 'generate_hillshade', '')
+        path = get_project_settings('NMT_analysis', 'generate_hillshade', '')
         if not os.path.exists(path):
             path = ""
         filename, __ = QFileDialog.getSaveFileName(
@@ -59,8 +59,8 @@ class GenerateHillshade_UI(QDialog, FORM_CLASS):
             path, "*.tif")
         if filename:
             self.wyjscie.setText(filename)
-        set_project_config('NMT_analysis', 'generate_hillshade',
-                           os.path.dirname(normalize_path(filename)))
+        set_project_settings('NMT_analysis', 'generate_hillshade',
+                           os.path.dirname(standarize_path(filename)))
 
     def run_dialog(self):
         self.show()

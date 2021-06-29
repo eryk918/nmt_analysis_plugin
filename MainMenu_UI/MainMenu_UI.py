@@ -39,7 +39,7 @@ from ..GenerateStatistics.GenerateStatistics import GenerateStatistics
 from ..RasterCutter.RasterCutter import RasterCutter
 from ..SetProjection.SetProjection import SetProjection
 from ..TaskAutomation.TaskAutomation import TaskAutomation
-from ..utils import normalize_path
+from ..utils import standarize_path
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'MainMenu_UI.ui'))
@@ -51,7 +51,7 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
         self.parent = parent
         self.plugin_path = plugin_path
-        self.icon_path = normalize_path(
+        self.icon_path = standarize_path(
             os.path.join(self.plugin_path, 'images//icon.png'))
         self.icon = QtGui.QIcon(self.icon_path)
         self.plugin_dir = os.path.dirname(__file__)
@@ -95,7 +95,7 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
         self.btn_automatic.clicked.connect(self.taskAutomation.run)
 
         # Wygeneruj model 3D
-        self.qgis2threejs_path = normalize_path(
+        self.qgis2threejs_path = standarize_path(
             os.path.join(self.plugin_path, '..//Qgis2threejs'))
         if os.path.exists(self.qgis2threejs_path) and self.qgis2threejs_exists:
             sys.path.insert(1, self.qgis2threejs_path)
@@ -109,7 +109,7 @@ class NMTMainMenu(QtWidgets.QDialog, FORM_CLASS):
 
     def show_info_about_plugin(self):
         QMessageBox.about(
-            self, 'O wtyczce - Analiza NMT',
+            self, 'Analizy NMT - O wtyczce',
             'Wtyczka powstała na potrzeby pracy licencjackiej.\n\n'
             'Temat: "Opracowanie wtyczki QGIS umożliwiającej '
             'zautomatyzowane analizy numerycznych modeli terenu"\n'

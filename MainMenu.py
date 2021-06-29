@@ -48,7 +48,7 @@ class NMTAnalysis:
             QCoreApplication.installTranslator(self.translator)
 
         self.actions = []
-        self.menu = self.tr(u'&Analiza NMT')
+        self.menu = self.tr(u'&Analizy NMT')
         self.first_start = None
 
     def tr(self, message):
@@ -84,7 +84,7 @@ class NMTAnalysis:
         icon_path = os.path.join(self.plugin_dir, 'images/icon_s.png')
         self.add_action(
             icon_path,
-            text=self.tr('Analiza NMT'),
+            text=self.tr('Analizy NMT'),
             callback=self.run,
             parent=self.iface.mainWindow())
         self.first_start = True
@@ -92,7 +92,7 @@ class NMTAnalysis:
     def unload(self):
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr('Analiza NMT'),
+                self.tr('Analizy NMT'),
                 action)
             self.iface.removeToolBarIcon(action)
 

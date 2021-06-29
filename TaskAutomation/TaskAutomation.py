@@ -4,7 +4,7 @@ import os
 from qgis.PyQt.QtWidgets import QApplication, QMessageBox
 
 from .UI.TaskAutomation_UI import TaskAutomation_UI
-from ..utils import project, i_iface, create_progress_bar, \
+from ..utils import project, iface, create_progress_bar, \
     change_progressbar_value, Qt
 
 from ..GenerateHillshade.UI.GenerateHillshade_UI import GenerateHillshade_UI
@@ -23,28 +23,12 @@ from ..GenerateSlope.GenerateSlope import GenerateSlope
 from ..RasterCutter.RasterCutter import RasterCutter
 from ..SetProjection.SetProjection import SetProjection
 from ..GenerateAspect.GenerateAspect import GenerateAspect
-# from ..GenerateHillshade.UI.GenerateHillshade_UI import GenerateHillshade_UI
-# from ..GenerateStatistics.UI.GenerateStatistics_UI import GenerateStatistics_UI
-# from ..GeneratePoints.UI.GeneratePoints_UI import GeneratePoints_UI
-# from ..GeneratePolygons.UI.GeneratePolygons_UI import GeneratePolygons_UI
-# from ..GenerateSlope.UI.GenerateSlope_UI import GenerateSlope_UI
-# from ..RasterCutter.UI.RasterCutter_UI import RasterCutter_UI
-# from ..SetProjection.UI.SetProjection_UI import SetProjection_UI
-# from ..GenerateAspect.UI.GenerateAspect_UI import GenerateAspect_UI
-# from ..GenerateHillshade.GenerateHillshade import GenerateHillshade
-# from ..GenerateStatistics.GenerateStatistics import GenerateStatistics
-# from ..GeneratePoints.GeneratePoints import GeneratePoints
-# from ..GeneratePolygons.GeneratePolygons import GeneratePolygons
-# from ..GenerateSlope.GenerateSlope import GenerateSlope
-# from ..RasterCutter.RasterCutter import RasterCutter
-# from ..SetProjection.SetProjection import SetProjection
-# from ..GenerateAspect.GenerateAspect import GenerateAspect
 
 
 class TaskAutomation:
     def __init__(self, parent):
         self.main = parent
-        self.iface = i_iface
+        self.iface = iface
         self.project_path = os.path.dirname(
             os.path.abspath(project.fileName()))
         self.actual_crs = project.crs().postgisSrid()
@@ -101,26 +85,25 @@ class TaskAutomation:
         self.dlg.accept()
         mech_counter = 1
         self.mechanism_dict = {}
-        self.defined_mechs = []
+        self.defined_mechs_dialogs = []
         self.algs = {}
         for cbbx in self.dlg.cbbx_list:
             mech_name = f'self.mech_{mech_counter}_dialog'
-            exec(
-                f'{mech_name} = {self.dlg.mecha_dict[cbbx.currentText()]}(self, allow_silent=True)')
+            exec(f'{mech_name} = {self.dlg.mecha_dict[cbbx.currentText()]}(self, allow_silent=True)')
             exec(f'{mech_name}.setup_dialog()')
             exec(f'{mech_name}.rejected.connect(self.force_close_all)')
             self.algs[mech_name] = self.dlg.mecha_dict[cbbx.currentText()].rstrip('_UI')
-            self.defined_mechs.append(mech_name)
+            self.defined_mechs_dialogs.append(mech_name)
             self.mechanism_dict[mech_name] = None
             mech_counter += 1
 
     def run_dialogs(self):
         self.force_end = False
-        for dialog in self.defined_mechs:
+        for dialog in self.defined_mechs_dialogs:
             self.mech = dialog
-            if dialog != self.defined_mechs[-1]:
+            if dialog != self.defined_mechs_dialogs[-1]:
                 exec(f'{dialog}.pushButton_zapisz.setText("Dalej")')
-            if dialog != self.defined_mechs[0]:
+            if dialog != self.defined_mechs_dialogs[0]:
                 for mech in self.rasters_mechs.keys():
                     if mech in self.mechanism_dict[
                         self.defined_mechs[
@@ -130,8 +113,7 @@ class TaskAutomation:
                             if out_type == 'all':
                                 if any(ext in
                                        self.mechanism_dict[self.defined_mechs[
-                                           self.defined_mechs.index(
-                                               dialog) - 1]]
+                                           self.defined_mechs.index(dialog) - 1]]
                                        for ext in ('.tif', '.asc', '.xyz')):
                                     out_type = 'raster'
                                 else:
@@ -139,7 +121,7 @@ class TaskAutomation:
                                 mech = self.inv_mecha_links[self.algs[dialog]]
                             try:
                                 exec(f'{dialog}.{self.data_type[out_type][mech][0]}.lineEdit().setPlaceholderText("Warstwa wyjściowa z poprzedniego algorytmu")')
-                            except KeyError:
+                            except (KeyError, IndexError, ValueError, AttributeError):
                                 pass
             exec(f'{dialog}.run_dialog()')
             if self.force_end:
@@ -178,8 +160,8 @@ class TaskAutomation:
                 if 'powiodło' not in self.info_log[mech]:
                     self.tmp_parameter = self.info_log[mech]
                     if os.path.exists(self.tmp_parameter):
-                        self.tmp_parameter = self.tmp_parameter.replace('\\',
-                                                                        '\\\\')
+                        self.tmp_parameter = self.tmp_parameter.replace(
+                            '\\', '\\\\')
                     self.info_log[mech] = None
                 step = False
                 if mech == list(self.mechanism_dict)[-1]:

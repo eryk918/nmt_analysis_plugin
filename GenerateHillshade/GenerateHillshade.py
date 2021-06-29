@@ -7,14 +7,14 @@ from qgis import processing
 from qgis.PyQt.QtWidgets import QMessageBox, QApplication
 
 from ..GenerateHillshade.UI.GenerateHillshade_UI import GenerateHillshade_UI
-from ..utils import project, create_progress_bar, i_iface, \
-    normalize_path, add_rasters_to_project, Qt
+from ..utils import project, create_progress_bar, iface, \
+    standarize_path, add_rasters_to_project, Qt
 
 
 class GenerateHillshade:
     def __init__(self, parent):
         self.main = parent
-        self.iface = i_iface
+        self.iface = iface
         self.project_path = os.path.dirname(
             os.path.abspath(project.fileName()))
         self.actual_crs = project.crs().postgisSrid()
@@ -40,7 +40,7 @@ class GenerateHillshade:
         QApplication.processEvents()
         if hasattr(self, "progress"):
             self.progress.close()
-        self.list_of_splitted_rasters = []
+        self.list_of_created_rasters = []
         if not self.tmp_layers_flag:
             shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
@@ -57,7 +57,8 @@ class GenerateHillshade:
             {'AZIMUTH': azimuth, 'INPUT': input_raster,
              'OUTPUT': tmp_raster_filepath, 'V_ANGLE': v_angle,
              'Z_FACTOR': zfactor})
-        self.list_of_splitted_rasters.append(tmp_raster_filepath)
+        QApplication.processEvents()
+        self.list_of_created_rasters.append(tmp_raster_filepath)
 
     def gen_hillshade_process(self, input_files, zfactor, azimuth, v_angle,
                               export_directory, q_add_to_project,
@@ -70,15 +71,15 @@ class GenerateHillshade:
             self.progress.show()
         QApplication.processEvents()
         self.tmp_dir = mkdtemp(suffix=f'nmt_generate_hillshade')
-        qml_path = normalize_path(
+        qml_path = standarize_path(
             os.path.join(self.main.plugin_dir,
                          '..\\GenerateHillshade\\style.qml'))
         self.tmp_layers_flag = False
         if export_directory and export_directory not in (' ', ',') and \
                 export_directory != ".":
-            self.export_path = normalize_path(export_directory)
+            self.export_path = standarize_path(export_directory)
             self.tmp_layers_flag = True
-        self.list_of_splitted_rasters = []
+        self.list_of_created_rasters = []
         self.last_progress_value = 0
         QApplication.processEvents()
         try:
@@ -87,8 +88,8 @@ class GenerateHillshade:
             return self.invalid_data_error()
         if q_add_to_project:
             add_rasters_to_project("CIENIOWANIE",
-                                   self.list_of_splitted_rasters, qml_path)
-        export_list = self.list_of_splitted_rasters
+                                   self.list_of_created_rasters, qml_path)
+        export_list = self.list_of_created_rasters
         self.clean_after_analysis()
         self.dlg.close()
         if not self.silent:

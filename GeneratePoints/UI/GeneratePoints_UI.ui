@@ -35,7 +35,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Analizy NMT - Generowanie punktów wysokościowych</string>
+   <string>Analizy NMT - Wygeneruj punkty wysokościowe</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -305,7 +305,7 @@
          <number>0</number>
         </property>
         <property name="text">
-         <string>Generowanie punktów wysokościowych</string>
+         <string>Wygeneruj punkty wysokościowe</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>

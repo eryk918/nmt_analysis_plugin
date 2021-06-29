@@ -5,8 +5,8 @@ from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
 
-from ...utils import repair_comboboxes, normalize_path, \
-    get_project_config, set_project_config
+from ...utils import repair_comboboxes, standarize_path, \
+    get_project_settings, set_project_settings
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'RasterCutter_UI.ui'))
@@ -33,7 +33,7 @@ class RasterCutter_UI(QDialog, FORM_CLASS):
             self.rasterCutter.cutting_process(
                 self.wejscie.lineEdit().text(),
                 self.maska.lineEdit().text(),
-                normalize_path(self.wyjscie.text()),
+                standarize_path(self.wyjscie.text()),
                 self.add_to_project_cbbx.isChecked())
         else:
             QMessageBox.warning(self, 'Ostrzeżenie',
@@ -48,15 +48,15 @@ class RasterCutter_UI(QDialog, FORM_CLASS):
             self.add_to_project_cbbx.setEnabled(False)
 
     def get_output_file(self):
-        path = get_project_config('NMT_analysis', 'raster_cut_path', '')
+        path = get_project_settings('NMT_analysis', 'raster_cut_path', '')
         if not os.path.exists(path):
             path = ""
         dir_path = QFileDialog.getExistingDirectory(
             self, "Wybierz lokalizacje do zapisu rastrów", path)
         if dir_path:
             self.wyjscie.setText(dir_path)
-        set_project_config('NMT_analysis', 'raster_cut_path',
-                           os.path.dirname(normalize_path(dir_path)))
+        set_project_settings('NMT_analysis', 'raster_cut_path',
+                           os.path.dirname(standarize_path(dir_path)))
 
     def run_dialog(self):
         self.show()

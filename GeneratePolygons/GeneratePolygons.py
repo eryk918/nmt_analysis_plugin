@@ -3,20 +3,21 @@ import os
 import shutil
 
 from qgis import processing
+from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtWidgets import QApplication, QMessageBox
-from qgis.core import QgsProcessingFeatureSourceDefinition
+from qgis.core import QgsProcessingFeatureSourceDefinition, QgsField
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsFeatureRequest
 
 from ..GeneratePolygons.UI.GeneratePolygons_UI import GeneratePolygons_UI
 from ..utils import project, create_progress_bar, \
-    add_map_layer, i_iface, change_progressbar_value, normalize_path, \
+    add_layer_into_map, iface, change_progressbar_value, standarize_path, \
     CreateTemporaryLayer, Qt
 
 
 class GeneratePolygons:
     def __init__(self, parent):
         self.main = parent
-        self.iface = i_iface
+        self.iface = iface
         self.project_path = os.path.dirname(
             os.path.abspath(project.fileName()))
         self.actual_crs = project.crs().postgisSrid()
@@ -28,44 +29,53 @@ class GeneratePolygons:
 
     def raster_to_vector_point(self, src_raster):
         try:
-            return processing.run(
+            lyr = processing.run(
                 "native:pixelstopoints",
                 {'FIELD_NAME': 'parametr', 'INPUT_RASTER': src_raster,
                  'OUTPUT': 'TEMPORARY_OUTPUT', 'RASTER_BAND': 1})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             return
 
-    def multipart_to_singlepart(self, lyr):
+    def multipart_to_singlepart(self, layer):
         try:
-            return processing.run(
+            lyr = processing.run(
                 "native:multiparttosingleparts", {
-                    'INPUT': lyr, 'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
-
+                    'INPUT': layer, 'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             pass
 
     def extract_layer_extent(self, src_raster):
         try:
-            return processing.run(
+            lyr = processing.run(
                 "native:polygonfromlayerextent",
                 {'INPUT': src_raster, 'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             pass
 
     def layer_difference(self, base_lyr, diff_lyr):
         try:
-            return processing.run("native:difference", {
+            lyr = processing.run("native:difference", {
                 'INPUT': base_lyr, 'OVERLAY': diff_lyr,
                 'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             pass
 
     def clip_layers(self, base_lyr, clip_lyr):
         try:
-            return processing.run(
+            lyr = processing.run(
                 "native:clip",
                 {'INPUT': base_lyr, 'OVERLAY': clip_lyr,
                  'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             pass
 
@@ -80,11 +90,13 @@ class GeneratePolygons:
 
     def generate_features(self, base_layer, height, width, rotation, shape):
         try:
-            return processing.run(
+            lyr = processing.run(
                 "native:rectanglesovalsdiamonds",
                 {'INPUT': base_layer, 'SHAPE': shape, 'WIDTH': width,
                  'HEIGHT': height, 'ROTATION': rotation, 'SEGMENTS': 5,
                  'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             pass
 
@@ -102,31 +114,37 @@ class GeneratePolygons:
         else:
             intersect = overlay
         try:
-            return processing.run(
+            lyr = processing.run(
                 "native:extractbylocation",
                 {'INPUT': base_lyr, 'PREDICATE': pred, 'INTERSECT': intersect,
                  'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             pass
 
     def aggregate_layer(self, base_lyr):
         try:
-            return processing.run(
+            lyr = processing.run(
                 "native:aggregate",
                 {'INPUT': base_lyr, 'GROUP_BY': 'NULL',
                  'AGGREGATES': [
                      {'aggregate': 'sum', 'delimiter': ',', 'input': '"DN"',
                       'length': 9, 'name': 'DN', 'precision': 0, 'type': 2}],
                  'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             pass
 
-    def create_buffer(self, lyr, distance):
+    def create_buffer(self, layer, distance):
         try:
-            return processing.run("native:buffer", {
-                'INPUT': lyr, 'DISTANCE': distance, 'SEGMENTS': 5,
+            lyr = processing.run("native:buffer", {
+                'INPUT': layer, 'DISTANCE': distance, 'SEGMENTS': 5,
                 'END_CAP_STYLE': 0, 'JOIN_STYLE': 0, 'MITER_LIMIT': 2,
                 'DISSOLVE': False, 'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
         except KeyError:
             pass
 
@@ -144,15 +162,17 @@ class GeneratePolygons:
         lowest = points.selectedFeatures()[0]
         points.removeSelection()
         if highest['parametr'] - lowest['parametr'] > max_height:
+            self.height_poly = (highest['parametr'] + lowest['parametr']) / 2
             return False
         else:
+            self.height_poly = (highest['parametr'] + lowest['parametr']) / 2
             return True
 
     def add_vector_to_project(self, layer, group_name):
         group_import = project.layerTreeRoot().findGroup(group_name)
         if not group_import:
             project.layerTreeRoot().addGroup(group_name)
-        add_map_layer(layer, group_name)
+        add_layer_into_map(layer, group_name)
 
     def invalid_data_error(self):
         self.clean_after_analysis()
@@ -167,12 +187,12 @@ class GeneratePolygons:
                 QMessageBox.Ok)
 
     def clean_after_analysis(self):
-        for layer in self.list_of_layers:
-            try:
-                eval(f'del {layer}')
-            except:
-                pass
-        self.list_of_layers = []
+        try:
+            for lyrid in self.layers_list:
+                project.removeMapLayer(lyrid)
+            del self.feats_to_predict, self.extracted_values
+        except:
+            pass
         if hasattr(self, "progress"):
             self.progress.close()
 
@@ -189,14 +209,14 @@ class GeneratePolygons:
             self.progress.show()
             change_progressbar_value(self.progress, self.last_progress_value,
                                      0, self.silent)
-        self.list_of_layers = []
         filename = input_files.split('\\')[-1].strip(
             input_files.split("\\")[-1].split('.')[-1])[:-1]
-        qml_path = normalize_path(
+        qml_path = standarize_path(
             os.path.join(self.main.plugin_dir,
                          '..\\GeneratePolygons\\utils\\polygons.qml'))
-        input_files = normalize_path(input_files)
-        mask_file = normalize_path(mask_file)
+        self.layers_list = []
+        input_files = standarize_path(input_files)
+        mask_file = standarize_path(mask_file)
         dem_extent = self.extract_layer_extent(input_files)
         QApplication.processEvents()
         mask_layer = QgsVectorLayer(mask_file, 'input_lyr', 'ogr')
@@ -218,14 +238,16 @@ class GeneratePolygons:
         QApplication.processEvents()
         self.extracted_values = \
             self.extract_by_location(features_to_analysis, extent)
-        self.list_of_layers.append(self.extracted_values)
         tmp_lyr = CreateTemporaryLayer(
             f"polygon?crs=EPSG:{mask_layer.crs().postgisSrid()}",
             'Wygenerowane poligony', "memory")
+        tmp_lyr.set_layer_fields(
+            [QgsField("srednia_wysokosc", QVariant.Double, 'double', 20, 2)])
         QApplication.processEvents()
-        self.feats_to_predict = self.extracted_values.getFeatures()
-        self.list_of_layers.append(self.feats_to_predict)
+        self.feats_to_predict = list(self.extracted_values.getFeatures())
         counter = 0
+        if not self.feats_to_predict:
+            return self.invalid_data_error()
         try:
             while True:
                 for feat in self.feats_to_predict:
@@ -239,6 +261,8 @@ class GeneratePolygons:
                         True)
                     QApplication.processEvents()
                     if self.get_height_difference(points_to_calc, height):
+                        if hasattr(self, 'height_poly'):
+                            feature.setAttributes([self.height_poly])
                         tmp_lyr.dataProvider().addFeature(feature)
                         self.extracted_values.removeSelection()
                         counter += 1
@@ -246,11 +270,17 @@ class GeneratePolygons:
                         self.extracted_values.removeSelection()
                         continue
                     buffer = self.create_buffer(tmp_lyr, offset)
+                    QApplication.processEvents()
                     self.extracted_values = self.extract_by_location(
                         self.extracted_values, buffer, [2])
-                    self.feats_to_predict = self.extracted_values.getFeatures()
+                    QApplication.processEvents()
+                    self.feats_to_predict = \
+                        list(self.extracted_values.getFeatures())
                     QApplication.processEvents()
                     break
+                QApplication.processEvents()
+                if not self.feats_to_predict:
+                    return self.invalid_data_error()
                 if counter == amount:
                     break
         except RuntimeError:
