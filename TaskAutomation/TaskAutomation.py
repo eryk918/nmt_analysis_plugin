@@ -106,14 +106,14 @@ class TaskAutomation:
             if dialog != self.defined_mechs_dialogs[0]:
                 for mech in self.rasters_mechs.keys():
                     if mech in self.mechanism_dict[
-                        self.defined_mechs[
-                            self.defined_mechs.index(dialog) - 1]]:
+                        self.defined_mechs_dialogs[
+                            self.defined_mechs_dialogs.index(dialog) - 1]]:
                         out_type = self.rasters_mechs[mech][-1]
                         if out_type and self.data_type[out_type]:
                             if out_type == 'all':
                                 if any(ext in
-                                       self.mechanism_dict[self.defined_mechs[
-                                           self.defined_mechs.index(dialog) - 1]]
+                                       self.mechanism_dict[self.defined_mechs_dialogs[
+                                           self.defined_mechs_dialogs.index(dialog) - 1]]
                                        for ext in ('.tif', '.asc', '.xyz')):
                                     out_type = 'raster'
                                 else:

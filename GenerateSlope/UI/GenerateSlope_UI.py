@@ -28,7 +28,8 @@ class GenerateSlope_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath() or self.silent:
+        if self.wejscie.filePath() or \
+                self.wejscie.lineEdit().placeholderText():
             self.accept()
             self.generateSlope.gen_slope_process(
                 self.wejscie.lineEdit().text(),
@@ -58,7 +59,7 @@ class GenerateSlope_UI(QDialog, FORM_CLASS):
         if filename:
             self.wyjscie.setText(filename)
         set_project_settings('NMT_analysis', 'generate_slope',
-                           os.path.dirname(standarize_path(filename)))
+                             os.path.dirname(standarize_path(filename)))
 
     def run_dialog(self):
         self.show()

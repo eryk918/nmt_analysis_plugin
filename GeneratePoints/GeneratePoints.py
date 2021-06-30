@@ -210,6 +210,8 @@ class GeneratePoints:
         self.list_of_created_rasters = []
         self.list_of_vectorized_layers = []
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
+        if hasattr(self, "progress"):
+            self.progress.close()
 
     def generate_points(
             self, input_files, mask_file, export_directory, an_min, an_max,
@@ -217,7 +219,7 @@ class GeneratePoints:
         self.silent = silent
         self.progress = \
             create_progress_bar(
-                100, txt='Trwa generowanie punktów wysokościowych...',
+                0, txt='Trwa generowanie punktów wysokościowych...',
                 silent=silent)
         if not self.silent:
             self.progress.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -239,9 +241,7 @@ class GeneratePoints:
             return self.invalid_data_error()
         for raster in self.list_of_created_rasters:
             self.raster_to_vector_point(raster)
-            change_progressbar_value(
-                self.progress, self.last_progress_value,
-                16 / len(self.list_of_created_rasters), silent=self.silent)
+            QApplication.processEvents()
         tmp_lyr = self.create_tmp_layer(f'{filename}_pkt_wys')
         for vector in self.list_of_vectorized_layers:
             try:
@@ -250,9 +250,7 @@ class GeneratePoints:
             except IndexError:
                 return self.invalid_data_error()
             self.add_and_set_final_features(tmp_lyr, najnizsze, najwyzsze)
-            change_progressbar_value(self.progress, self.last_progress_value,
-                                     46 / len(self.list_of_vectorized_layers),
-                                     silent=self.silent)
+            QApplication.processEvents()
         if export_directory not in (".", ""):
             _writer = QgsVectorFileWriter.writeAsVectorFormat(tmp_lyr,
                                                               export_directory,

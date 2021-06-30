@@ -28,7 +28,8 @@ class GenerateStatistics_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath() or self.silent:
+        if self.wejscie.filePath() or \
+                self.wejscie.lineEdit().placeholderText():
             self.accept()
             self.generateStatistics.generate_statistics_process(
                 self.wejscie.lineEdit().text(),
@@ -59,7 +60,7 @@ class GenerateStatistics_UI(QDialog, FORM_CLASS):
             if filename:
                 self.wyjscie.setText(filename)
             set_project_settings('NMT_analysis', 'generate_statistics',
-                               os.path.dirname(standarize_path(filename)))
+                                 os.path.dirname(standarize_path(filename)))
         else:
             QMessageBox.warning(
                 self, 'Ostrzeżenie',

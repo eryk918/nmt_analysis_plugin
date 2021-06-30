@@ -28,7 +28,10 @@ class RasterCutter_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if (self.wejscie.filePath() and self.maska.filePath()) or self.silent:
+        if self.wejscie.filePath() or \
+                self.wejscie.lineEdit().placeholderText() and \
+                self.maska.filePath() or \
+                self.maska.lineEdit().placeholderText():
             self.accept()
             self.rasterCutter.cutting_process(
                 self.wejscie.lineEdit().text(),
@@ -56,7 +59,7 @@ class RasterCutter_UI(QDialog, FORM_CLASS):
         if dir_path:
             self.wyjscie.setText(dir_path)
         set_project_settings('NMT_analysis', 'raster_cut_path',
-                           os.path.dirname(standarize_path(dir_path)))
+                             os.path.dirname(standarize_path(dir_path)))
 
     def run_dialog(self):
         self.show()

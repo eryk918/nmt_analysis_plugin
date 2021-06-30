@@ -28,7 +28,8 @@ class GenerateHillshade_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath() or self.silent:
+        if self.wejscie.filePath() or \
+                self.wejscie.lineEdit().placeholderText():
             self.accept()
             self.generateHillshade.gen_hillshade_process(
                 self.wejscie.lineEdit().text(),
@@ -60,7 +61,7 @@ class GenerateHillshade_UI(QDialog, FORM_CLASS):
         if filename:
             self.wyjscie.setText(filename)
         set_project_settings('NMT_analysis', 'generate_hillshade',
-                           os.path.dirname(standarize_path(filename)))
+                             os.path.dirname(standarize_path(filename)))
 
     def run_dialog(self):
         self.show()

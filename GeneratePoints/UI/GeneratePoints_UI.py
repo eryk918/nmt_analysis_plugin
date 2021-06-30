@@ -28,7 +28,10 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if (self.wejscie.filePath() and self.maska.filePath()) or self.silent:
+        if self.wejscie.filePath() or \
+                self.wejscie.lineEdit().placeholderText() and \
+                self.maska.filePath() or \
+                self.maska.lineEdit().placeholderText():
             self.accept()
             self.generatePoints.generate_points(
                 self.wejscie.lineEdit().text(),
@@ -61,7 +64,7 @@ class GeneratePoints_UI(QDialog, FORM_CLASS):
         if filename:
             self.wyjscie.setText(filename)
         set_project_settings('NMT_analysis', 'nmt_export_path',
-                           os.path.dirname(standarize_path(filename)))
+                             os.path.dirname(standarize_path(filename)))
 
     def run_dialog(self):
         self.show()

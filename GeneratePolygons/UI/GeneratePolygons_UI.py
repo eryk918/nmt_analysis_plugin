@@ -33,7 +33,10 @@ class GeneratePolygons_UI(QDialog, FORM_CLASS):
         self.feat_type_cbbx.addItems(self.polygon_type.keys())
 
     def validate_fields(self):
-        if (self.wejscie.filePath() and self.maska.filePath()) or self.silent:
+        if self.wejscie.filePath() or \
+                self.wejscie.lineEdit().placeholderText() and \
+                self.maska.filePath() or \
+                self.maska.lineEdit().placeholderText():
             self.accept()
             self.generatePolygons.generate_polys(
                 self.wejscie.lineEdit().text(),

@@ -4,7 +4,6 @@ import os
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
-from qgis.core import QgsCoordinateReferenceSystem
 
 from ...utils import repair_comboboxes, standarize_path, \
     get_project_settings, set_project_settings, project
@@ -30,7 +29,9 @@ class SetProjection_UI(QDialog, FORM_CLASS):
         self.dest_proj.setCrs(project.crs())
 
     def validate_fields(self):
-        if (self.wejscie.filePath() and self.dest_proj.crs().postgisSrid() != 0) or self.silent:
+        if self.wejscie.filePath() or \
+                self.wejscie.lineEdit().placeholderText() and \
+                self.dest_proj.crs().postgisSrid() != 0:
             self.accept()
             self.setProjection.set_proj_process(
                 self.wejscie.lineEdit().text(),
@@ -61,7 +62,7 @@ class SetProjection_UI(QDialog, FORM_CLASS):
             if filename:
                 self.wyjscie.setText(filename)
             set_project_settings('NMT_analysis', 'set_projection',
-                               os.path.dirname(standarize_path(filename)))
+                                 os.path.dirname(standarize_path(filename)))
         else:
             QMessageBox.warning(
                 self, 'Ostrzeżenie',

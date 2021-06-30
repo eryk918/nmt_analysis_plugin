@@ -27,7 +27,8 @@ class GenerateAspect_UI(QDialog, FORM_CLASS):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def validate_fields(self):
-        if self.wejscie.filePath() or self.silent:
+        if self.wejscie.filePath() or \
+                self.wejscie.lineEdit().placeholderText():
             self.accept()
             self.generateAspect.gen_aspect_process(
                 self.wejscie.lineEdit().text(),
