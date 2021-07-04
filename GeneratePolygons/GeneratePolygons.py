@@ -137,6 +137,17 @@ class GeneratePolygons:
         except KeyError:
             pass
 
+    def repair_layer(self, base_lyr):
+        try:
+            lyr = processing.run(
+                "native:fixgeometries",
+                {'INPUT': base_lyr,
+                 'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+            self.layers_list.append(lyr.id())
+            return lyr
+        except KeyError:
+            pass
+
     def create_buffer(self, layer, distance):
         try:
             lyr = processing.run("native:buffer", {
@@ -234,7 +245,8 @@ class GeneratePolygons:
         polygonized_layer = self.polygonize_raster(input_files)
         QApplication.processEvents()
         extent = self.layer_difference(
-            self.aggregate_layer(polygonized_layer), mask_file)
+            self.aggregate_layer(self.repair_layer(polygonized_layer)),
+            mask_file)
         QApplication.processEvents()
         self.extracted_values = \
             self.extract_by_location(features_to_analysis, extent)

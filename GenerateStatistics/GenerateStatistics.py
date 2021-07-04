@@ -4,12 +4,13 @@ import shutil
 from datetime import datetime
 from tempfile import mkdtemp
 
+from chardet import detect
 from qgis import processing
 from qgis.PyQt.QtWidgets import QMessageBox, QApplication
 
 from ..GenerateStatistics.UI.GenerateStatistics_UI import GenerateStatistics_UI
 from ..utils import project, create_progress_bar, iface, standarize_path, \
-    open_other_files, Qt
+    open_other_files, Qt, repair_encoding
 
 
 class GenerateStatistics:
@@ -82,6 +83,7 @@ class GenerateStatistics:
         QApplication.processEvents()
         try:
             self.generate_statistics(input_files)
+            repair_encoding(self.tmp_dir, self.list_of_files[-1])
         except RuntimeError:
             return self.invalid_data_error()
         if q_add_to_project:

@@ -2,10 +2,13 @@
 
 import os
 import re
+import shutil
 import subprocess
 import sys
+from datetime import datetime
 
 from PyQt5.QtCore import Qt
+from chardet import detect
 from qgis.PyQt.QtWidgets import QComboBox, QApplication, QProgressDialog, \
     QMessageBox
 from qgis.core import QgsProject, QgsVectorLayer, \
@@ -151,3 +154,19 @@ Zainstaluj program obsługujący format *.{ext} i spróbuj ponownie.''',
 
 def standarize_path(path):
     return os.path.normpath(os.sep.join(re.split(r'\\|/', path)))
+
+
+def repair_encoding(tmp_dir, infile):
+    tmp_file = os.path.join(
+        tmp_dir,
+        f"{datetime.now().strftime('%H_%M_%S_%f')[:-3]}.{os.path.splitext(infile)[-1]}"
+    )
+    shutil.copyfile(infile, tmp_file)
+    os.remove(infile)
+    with open(tmp_file, 'rb') as file:
+        rawdata = rb''.join([file.readline() for _ in range(150)])
+    with open(tmp_file,
+              'r', encoding=detect(rawdata)['encoding']) as input_file, \
+            open(infile, 'w', encoding='utf-8') as output_file:
+        text = input_file.read()
+        output_file.write(text)

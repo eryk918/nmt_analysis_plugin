@@ -24,7 +24,7 @@
 import os.path
 
 from qgis.PyQt import QtGui
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
@@ -36,17 +36,6 @@ class NMTAnalysis:
     def __init__(self, iface):
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
-        locale = QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'NMTAnalysis_{}.qm'.format(locale))
-
-        if os.path.exists(locale_path):
-            self.translator = QTranslator()
-            self.translator.load(locale_path)
-            QCoreApplication.installTranslator(self.translator)
-
         self.actions = []
         self.menu = self.tr(u'&Analizy NMT')
         self.first_start = None
@@ -107,5 +96,3 @@ class NMTAnalysis:
 
         self.dlg.show()
         result = self.dlg.exec_()
-        if result:
-            pass

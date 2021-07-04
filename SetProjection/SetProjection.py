@@ -55,26 +55,26 @@ class SetProjection:
                 tmp_layer_filepath = \
                     os.path.join(
                         self.tmp_dir,
-                        f'{os.path.splitext(os.path.basename(input_layer))[0]}_{time}')
+                        f'{os.path.splitext(os.path.basename(input_layer))[0]}_{time}_{os.path.splitext(os.path.basename(input_layer))[-1]}')
         else:
             tmp_layer_filepath = os.path.join(
                 self.export_path, f'{os.path.basename(input_layer)}')
             if os.path.exists(tmp_layer_filepath):
                 tmp_layer_filepath = os.path.join(
                     self.export_path,
-                    f'{os.path.splitext(os.path.basename(input_layer))[0]}_{time}')
+                    f'{os.path.splitext(os.path.basename(input_layer))[0]}_{time}_{os.path.splitext(os.path.basename(input_layer))[-1]}')
         if QgsVectorLayer(input_layer, 'test', 'ogr').isValid() or \
                 'uid={' in input_layer:
             processing.run(
                 'native:reprojectlayer',
                 {'INPUT': input_layer, 'OUTPUT':
-                    f'{os.path.splitext(tmp_layer_filepath)[0]}.shp',
+                    tmp_layer_filepath,
                  'TARGET_CRS': f'EPSG:{dest_crs}'})
         else:
             processing.run(
-                'gdal:translate',
+                'gdal:warpreproject',
                 {'INPUT': input_layer, 'OUTPUT':
-                    f'{os.path.splitext(tmp_layer_filepath)[0]}.tif',
+                    tmp_layer_filepath,
                  'TARGET_CRS': f'EPSG:{dest_crs}'})
         self.list_of_layers.append(tmp_layer_filepath)
 
