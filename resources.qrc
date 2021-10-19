@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/plugins/nmt_analysis_plugin" >
+        <file>images/icon.png</file>
+        <file>images/icon_s.png</file>
+        <file>images/icon_b.png</file>
+    </qresource>
+</RCC>
