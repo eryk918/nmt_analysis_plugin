@@ -1,2 +1,2 @@
 # nmt_analysis_plugin
-Opracowanie wtyczki QGIS umożliwiającej zautomatyzowane analizy numerycznych modeli terenu;
+Plugin for QGIS for automated analysis of digital terrain models;
